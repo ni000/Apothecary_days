@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Apothecary Days</title>
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400..900;1,400..900&family=EB+Garamond:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Game Container -->
+    <div id="game-container">
+      
+      <!-- Background Layers -->
+      <div id="exterior-bg" class="bg-layer active"></div>
+      <div id="interior-bg" class="bg-layer"></div>
+
+      <!-- Game Canvas (for player & NPC) -->
+      <canvas id="game-canvas" width="1920" height="1080"></canvas>
+
+      <!-- Main Menu Overlay -->
+      <div id="main-menu" class="overlay active">
+        <h1 class="game-title">Apothecary Days</h1>
+        <button id="start-btn" class="fantasy-btn">Start Game</button>
+      </div>
+
+      <!-- HUD Overlay -->
+      <div id="hud" class="overlay hidden">
+        <div class="hud-panel time-panel">
+          <span id="day-text">Day 1</span>
+          <span id="time-text">08:00 AM</span>
+        </div>
+        <div class="hud-panel objective-panel">
+          <span>Objective: Open Shop</span>
+        </div>
+        <div class="hud-panel coin-panel">
+          <span id="coin-text">🪙 150</span>
+        </div>
+      </div>
+
+      <!-- Dialogue Overlay -->
+      <div id="dialogue-ui" class="overlay hidden">
+        <div class="dialogue-box">
+          <div class="dialogue-name">Customer</div>
+          <div id="dialogue-text" class="dialogue-text"></div>
+          <div class="dialogue-prompt blink hidden">Press E to continue</div>
+        </div>
+      </div>
+
+      <!-- Interaction Prompt -->
+      <div id="interaction-prompt" class="hidden">Press E</div>
+
+    </div>
+    
+
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
