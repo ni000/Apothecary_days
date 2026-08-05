@@ -120,8 +120,8 @@ canvas.addEventListener('mousedown', (e) => {
     }
   } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.WORKROOM) {
     // Check tap on Main Cabinet
-    if (mouseCanvasX >= 850 && mouseCanvasX <= 1070 && mouseCanvasY >= 100 && mouseCanvasY <= 470) {
-      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 960, 2) + Math.pow((player.y + player.renderHeight/2) - 440, 2));
+    if (mouseCanvasX >= 850 && mouseCanvasX <= 1070 && mouseCanvasY >= 100 && mouseCanvasY <= 543) {
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 960, 2) + Math.pow((player.y + player.renderHeight/2) - 500, 2));
       if (dist < 250) {
         activeCabinet = 'INGREDIENT';
         openCabinetView();
@@ -171,8 +171,8 @@ canvas.addEventListener('touchstart', (e) => {
     }
   } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.WORKROOM) {
     // Check tap on Main Cabinet
-    if (mouseCanvasX >= 850 && mouseCanvasX <= 1070 && mouseCanvasY >= 100 && mouseCanvasY <= 470) {
-      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 960, 2) + Math.pow((player.y + player.renderHeight/2) - 440, 2));
+    if (mouseCanvasX >= 850 && mouseCanvasX <= 1070 && mouseCanvasY >= 100 && mouseCanvasY <= 543) {
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 960, 2) + Math.pow((player.y + player.renderHeight/2) - 500, 2));
       if (dist < 250) {
         activeCabinet = 'INGREDIENT';
         openCabinetView();
@@ -718,7 +718,7 @@ function checkCollision(x, y, width, height) {
     // Furniture obstacle bounding boxes in full-screen Workroom
     const obstacles = [
       { x: 300, y: 410, w: 120, h: 66 },   // Stove
-      { x: 850, y: 410, w: 220, h: 60 },   // Main Cabinet
+      { x: 850, y: 470, w: 220, h: 73 },   // Main Cabinet
       { x: 1460, y: 410, w: 120, h: 60 },  // Second Cabinet
       { x: 1590, y: 440, w: 120, h: 30 },  // Potted Plant
       { x: 830, y: 620, w: 260, h: 128 }   // Worktable
@@ -1161,7 +1161,7 @@ function update(dt) {
     // Cabinet proximity & interaction (only in Workroom)
     if (currentRoom === RoomState.WORKROOM) {
       const mainCenterX = 960;
-      const mainCenterY = 440;
+      const mainCenterY = 500;
       const bottleCenterX = 1520;
       const bottleCenterY = 440;
       
@@ -1948,11 +1948,11 @@ function drawWorkroomEntities() {
       }
     },
     {
-      y: 486,
+      y: 543,
       draw: () => {
-        // Draw Main Cabinet (Y=-4, bottom Y=486, aspect-ratio preserved size: 220x490)
+        // Draw Main Cabinet (Y=53, bottom Y=543, aspect-ratio preserved size: 220x490)
         if (cabinetIngredientsImage.complete) {
-          ctx.drawImage(cabinetIngredientsImage, 850, -4, 220, 490);
+          ctx.drawImage(cabinetIngredientsImage, 850, 53, 220, 490);
         } else {
           drawSprite(ctx, mainCabinetSprite, mainCabinetColorMap, 880, 280, pixelScale);
         }
