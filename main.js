@@ -120,7 +120,7 @@ canvas.addEventListener('mousedown', (e) => {
     }
   } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.WORKROOM) {
     // Check tap on Main Cabinet
-    if (mouseCanvasX >= 880 && mouseCanvasX <= 1040 && mouseCanvasY >= 260 && mouseCanvasY <= 470) {
+    if (mouseCanvasX >= 850 && mouseCanvasX <= 1070 && mouseCanvasY >= 100 && mouseCanvasY <= 470) {
       const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 960, 2) + Math.pow((player.y + player.renderHeight/2) - 440, 2));
       if (dist < 250) {
         activeCabinet = 'INGREDIENT';
@@ -171,7 +171,7 @@ canvas.addEventListener('touchstart', (e) => {
     }
   } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.WORKROOM) {
     // Check tap on Main Cabinet
-    if (mouseCanvasX >= 880 && mouseCanvasX <= 1040 && mouseCanvasY >= 260 && mouseCanvasY <= 470) {
+    if (mouseCanvasX >= 850 && mouseCanvasX <= 1070 && mouseCanvasY >= 100 && mouseCanvasY <= 470) {
       const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 960, 2) + Math.pow((player.y + player.renderHeight/2) - 440, 2));
       if (dist < 250) {
         activeCabinet = 'INGREDIENT';
@@ -718,8 +718,9 @@ function checkCollision(x, y, width, height) {
     // Furniture obstacle bounding boxes in full-screen Workroom
     const obstacles = [
       { x: 300, y: 410, w: 120, h: 66 },   // Stove
-      { x: 880, y: 410, w: 160, h: 60 },   // Main Cabinet
+      { x: 850, y: 410, w: 220, h: 60 },   // Main Cabinet
       { x: 1460, y: 410, w: 120, h: 60 },  // Second Cabinet
+      { x: 1590, y: 440, w: 120, h: 30 },  // Potted Plant
       { x: 830, y: 620, w: 260, h: 128 }   // Worktable
     ];
     
@@ -892,6 +893,13 @@ plantImage.src = 'plant.png';
 // Load custom corner snake plant image
 const snakePlantImage = new Image();
 snakePlantImage.src = 'snake_plant.png';
+
+// Load custom cabinet images
+const cabinetIngredientsImage = new Image();
+cabinetIngredientsImage.src = 'cabinet_ingredients.png';
+
+const pottedPlantImage = new Image();
+pottedPlantImage.src = 'potted_plant.png';
 
 // Load custom flask images
 const flaskImages = {
@@ -1940,10 +1948,14 @@ function drawWorkroomEntities() {
       }
     },
     {
-      y: 480,
+      y: 486,
       draw: () => {
-        // Draw Main Cabinet (Y=280, bottom Y=480)
-        drawSprite(ctx, mainCabinetSprite, mainCabinetColorMap, 880, 280, pixelScale);
+        // Draw Main Cabinet (Y=-4, bottom Y=486, aspect-ratio preserved size: 220x490)
+        if (cabinetIngredientsImage.complete) {
+          ctx.drawImage(cabinetIngredientsImage, 850, -4, 220, 490);
+        } else {
+          drawSprite(ctx, mainCabinetSprite, mainCabinetColorMap, 880, 280, pixelScale);
+        }
       }
     },
     {
@@ -1951,6 +1963,15 @@ function drawWorkroomEntities() {
       draw: () => {
         // Draw Second Cabinet (Y=310, bottom Y=486)
         drawSprite(ctx, secondCabinetSprite, secondCabinetColorMap, 1460, 310, pixelScale);
+      }
+    },
+    {
+      y: 486,
+      draw: () => {
+        // Draw Potted Plant beside Second Cabinet (bottom Y=486, size 120x156)
+        if (pottedPlantImage.complete) {
+          ctx.drawImage(pottedPlantImage, 1590, 330, 120, 156);
+        }
       }
     },
     {
