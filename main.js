@@ -14,13 +14,6 @@ const mainMenu = document.getElementById('main-menu');
 const exteriorBg = document.getElementById('exterior-bg');
 const interiorBg = document.getElementById('interior-bg');
 const hud = document.getElementById('hud');
-const hudBookBtn = document.getElementById('hud-book-btn');
-hudBookBtn.addEventListener('click', () => {
-  if (currentState === GameState.GAMEPLAY) {
-    const targetPage = activeAilmentType ? (ailmentToRecipePage[activeAilmentType] || 1) : 1;
-    openBookView(targetPage);
-  }
-});
 const dialogueUI = document.getElementById('dialogue-ui');
 const dialogueText = document.getElementById('dialogue-text');
 const dialoguePrompt = document.querySelector('.dialogue-prompt');
@@ -41,7 +34,6 @@ function handleKeyDown(e) {
   }
   if (e.key === 'Escape' && currentState === GameState.BOOK) {
     closeBookView();
-    closeManuscriptView();
   }
 
   let key = e.key.toLowerCase();
@@ -95,11 +87,19 @@ canvas.addEventListener('mousemove', (e) => {
   const pos = getCanvasMousePos(e);
   mouseCanvasX = pos.x;
   mouseCanvasY = pos.y;
+  if (draggedItemIndex !== null) {
+    draggedItemX = mouseCanvasX;
+    draggedItemY = mouseCanvasY;
+  }
 });
 canvas.addEventListener('touchmove', (e) => {
   const pos = getCanvasMousePos(e);
   mouseCanvasX = pos.x;
   mouseCanvasY = pos.y;
+  if (draggedItemIndex !== null) {
+    draggedItemX = mouseCanvasX;
+    draggedItemY = mouseCanvasY;
+  }
 });
 
 canvas.addEventListener('mousedown', (e) => {
@@ -107,6 +107,22 @@ canvas.addEventListener('mousedown', (e) => {
   mouseCanvasX = pos.x;
   mouseCanvasY = pos.y;
   isMouseDown = true;
+
+  if (currentState === GameState.GAMEPLAY || currentState === GameState.CABINET) {
+    if (mouseCanvasY >= 920 && mouseCanvasY <= 1040) {
+      for (let i = 0; i < 10; i++) {
+        const slotX = 488 + i * (slotSize + slotSpacing);
+        if (mouseCanvasX >= slotX && mouseCanvasX <= slotX + slotSize) {
+          if (i < inventory.length) {
+            draggedItemIndex = i;
+            draggedItemX = mouseCanvasX;
+            draggedItemY = mouseCanvasY;
+            return;
+          }
+        }
+      }
+    }
+  }
   
   if (currentState === GameState.CABINET) {
     // Check Close Button: bounding box x [1740, 1860], y [50, 110]
@@ -207,6 +223,22 @@ canvas.addEventListener('touchstart', (e) => {
   mouseCanvasX = pos.x;
   mouseCanvasY = pos.y;
   isMouseDown = true;
+
+  if (currentState === GameState.GAMEPLAY || currentState === GameState.CABINET) {
+    if (mouseCanvasY >= 920 && mouseCanvasY <= 1040) {
+      for (let i = 0; i < 10; i++) {
+        const slotX = 488 + i * (slotSize + slotSpacing);
+        if (mouseCanvasX >= slotX && mouseCanvasX <= slotX + slotSize) {
+          if (i < inventory.length) {
+            draggedItemIndex = i;
+            draggedItemX = mouseCanvasX;
+            draggedItemY = mouseCanvasY;
+            return;
+          }
+        }
+      }
+    }
+  }
   
   if (currentState === GameState.CABINET) {
     // Check Close Button
@@ -304,6 +336,13 @@ canvas.addEventListener('touchstart', (e) => {
 
 canvas.addEventListener('mouseup', () => {
   isMouseDown = false;
+  if (draggedItemIndex !== null) {
+    if (mouseCanvasX < 468 || mouseCanvasX > 1452 || mouseCanvasY < 920 || mouseCanvasY > 1040) {
+      inventory.splice(draggedItemIndex, 1);
+      checkIngredientsCollected();
+    }
+    draggedItemIndex = null;
+  }
   if (activeHoldJarIndex !== null && !keys.e) {
     activeHoldJarIndex = null;
     holdTime = 0;
@@ -321,6 +360,13 @@ canvas.addEventListener('mouseup', () => {
 
 canvas.addEventListener('touchend', () => {
   isMouseDown = false;
+  if (draggedItemIndex !== null) {
+    if (mouseCanvasX < 468 || mouseCanvasX > 1452 || mouseCanvasY < 920 || mouseCanvasY > 1040) {
+      inventory.splice(draggedItemIndex, 1);
+      checkIngredientsCollected();
+    }
+    draggedItemIndex = null;
+  }
   if (activeHoldJarIndex !== null && !keys.e) {
     activeHoldJarIndex = null;
     holdTime = 0;
@@ -1526,31 +1572,33 @@ function update(dt) {
       if (isHoldingEOnBarrel || isHoldingMouseOnBarrel) {
         holdTime += dt;
         if (holdTime >= 1.0) {
-          inventory.push('Water');
-          checkIngredientsCollected();
-          
-          const startX = 750;
-          const startY = 463;
-          const hotbarXStart = 488;
-          const hotbarY = 860;
-          const slotSize = 80;
-          const slotSpacing = 16;
-          const endX = hotbarXStart + 9 * (slotSize + slotSpacing) + slotSize/2;
-          const endY = hotbarY + 10 + slotSize/2;
-          
-          activeAnimations.push({
-            type: 'collect_slide',
-            ingredientIndex: 9,
-            isBottle: false,
-            startX: startX,
-            startY: startY,
-            x: startX,
-            y: startY,
-            endX: endX,
-            endY: endY,
-            progress: 0,
-            duration: 0.6
-          });
+          if (inventory.length < 10) {
+            inventory.push('Water');
+            checkIngredientsCollected();
+            
+            const startX = 750;
+            const startY = 463;
+            const slotIndex = inventory.length - 1;
+            const slotSize = 80;
+            const slotSpacing = 16;
+            const slotX = 488 + slotIndex * (slotSize + slotSpacing);
+            const slotY = 940;
+            const endX = slotX + slotSize/2;
+            const endY = slotY + slotSize/2;
+            
+            activeAnimations.push({
+              type: 'collect_slide',
+              itemName: 'Water',
+              startX: startX,
+              startY: startY,
+              x: startX,
+              y: startY,
+              endX: endX,
+              endY: endY,
+              progress: 0,
+              duration: 0.6
+            });
+          }
           
           holdTime = 0;
           activeHoldBarrel = false;
@@ -1608,17 +1656,17 @@ function update(dt) {
             currentCustomerState = CustomerState.DELIVERY;
             updateObjective();
             
-            // Potion collection animation targets the 10th slot of row 2:
-            const hotbarXStart = 488;
-            const hotbarY = 860;
+            const slotIndex = inventory.length - 1;
             const slotSize = 80;
             const slotSpacing = 16;
-            const endX = hotbarXStart + 9 * (slotSize + slotSpacing) + slotSize/2;
-            const endY = hotbarY + 10 + slotSize + 12 + slotSize/2;
+            const slotX = 488 + slotIndex * (slotSize + slotSpacing);
+            const slotY = 940;
+            const endX = slotX + slotSize/2;
+            const endY = slotY + slotSize/2;
             
             activeAnimations.push({
               type: 'collect_slide',
-              name: 'Willow Bark Decoction',
+              itemName: 'Willow Bark Decoction',
               startX: stoveCenterX,
               startY: stoveCenterY,
               x: stoveCenterX,
@@ -1704,38 +1752,39 @@ function update(dt) {
     if (activeHoldJarIndex !== null && holdTime >= 1.0) {
       const ing = list[activeHoldJarIndex];
       if (!inventory.includes(ing.name)) {
-        inventory.push(ing.name);
-        checkIngredientsCollected();
-        
-        // Slide animation values
-        const r = Math.floor(activeHoldJarIndex / 3);
-        const c = activeHoldJarIndex % 3;
-        const rowY = [250, 510, 770];
-        const colX = [480, 960, 1440];
-        const startX = colX[c];
-        const startY = rowY[r];
-        
-        const hotbarXStart = (activeCabinet === 'INGREDIENT') ? 488 : 536;
-        const hotbarY = 860;
-        const slotSize = 80;
-        const slotSpacing = 16;
-        const endX = hotbarXStart + activeHoldJarIndex * (slotSize + slotSpacing) + slotSize/2;
-        // Y target coordinate is hotbarY + 10 for ingredients, hotbarY + 10 + slotSize + 12 for bottles
-        const endY = (activeCabinet === 'INGREDIENT') ? (hotbarY + 10 + slotSize/2) : (hotbarY + 10 + slotSize + 12 + slotSize/2);
-        
-        activeAnimations.push({
-          type: 'collect_slide',
-          ingredientIndex: activeHoldJarIndex,
-          isBottle: (activeCabinet === 'BOTTLE'),
-          startX: startX,
-          startY: startY,
-          x: startX,
-          y: startY,
-          endX: endX,
-          endY: endY,
-          progress: 0,
-          duration: 0.6
-        });
+        if (inventory.length < 10) {
+          inventory.push(ing.name);
+          checkIngredientsCollected();
+          
+          // Slide animation values
+          const r = Math.floor(activeHoldJarIndex / 3);
+          const c = activeHoldJarIndex % 3;
+          const rowY = [250, 510, 770];
+          const colX = [480, 960, 1440];
+          const startX = colX[c];
+          const startY = rowY[r];
+          
+          const slotIndex = inventory.length - 1;
+          const slotSize = 80;
+          const slotSpacing = 16;
+          const slotX = 488 + slotIndex * (slotSize + slotSpacing);
+          const slotY = 940;
+          const endX = slotX + slotSize/2;
+          const endY = slotY + slotSize/2;
+          
+          activeAnimations.push({
+            type: 'collect_slide',
+            itemName: ing.name,
+            startX: startX,
+            startY: startY,
+            x: startX,
+            y: startY,
+            endX: endX,
+            endY: endY,
+            progress: 0,
+            duration: 0.6
+          });
+        }
       }
       activeHoldJarIndex = null;
       holdTime = 0;
@@ -2392,6 +2441,11 @@ function draw() {
   // Active Slide Animations
   drawActiveAnimations();
   
+  // Dragged Item
+  if (draggedItemIndex !== null) {
+    drawInventoryItem(ctx, inventory[draggedItemIndex], draggedItemX, draggedItemY, 4);
+  }
+  
   // Transition Overlay
   if (transitionAlpha > 0) {
     ctx.fillStyle = `rgba(0, 0, 0, ${transitionAlpha})`;
@@ -2675,27 +2729,47 @@ function drawCabinetView() {
 
 // --- HOTBAR & INVENTORY ---
 
-const hotbarXStart = 536;
-const hotbarY = 860; // Shifted up to hold 2 rows
 const slotSize = 80;
 const slotSpacing = 16;
+const hotbarY = 920;
+
+// Drag and drop state variables
+let draggedItemIndex = null;
+let draggedItemX = 0;
+let draggedItemY = 0;
+
+function drawInventoryItem(ctx, name, x, y, scale) {
+  const ing = ingredients.find(i => i.name === name);
+  if (ing) {
+    drawCabinetJar(ctx, ing, x, y, scale);
+    return;
+  }
+  const b = bottles.find(i => i.name === name);
+  if (b) {
+    drawCabinetJar(ctx, b, x, y, scale);
+    return;
+  }
+  if (name === "Willow Bark Decoction") {
+    drawFlask(ctx, 'red', x - 44, y - 44);
+  }
+}
 
 function drawInventoryHotbar() {
-  // Wooden plank backer (holds 2 rows, height 200px, width 984px to fit 10 slots centered)
+  // Wooden plank backer (holds 1 row, height 120px, width 984px centered)
   ctx.fillStyle = '#8C6239';
-  ctx.fillRect(468, 860, 984, 200);
+  ctx.fillRect(468, hotbarY, 984, 120);
   
   ctx.strokeStyle = '#1d1511';
   ctx.lineWidth = 6;
-  ctx.strokeRect(468, 860, 984, 200);
+  ctx.strokeRect(468, hotbarY, 984, 120);
   
   ctx.fillStyle = '#C89A6A';
-  ctx.fillRect(468, 862, 984, 4);
+  ctx.fillRect(468, hotbarY + 2, 984, 4);
   
-  // Row 1: Ingredients (10 slots starting at 488)
+  // Draw 10 slots
   for (let i = 0; i < 10; i++) {
     const slotX = 488 + i * (slotSize + slotSpacing);
-    const slotY = hotbarY + 10;
+    const slotY = hotbarY + 20;
     
     // Slot frame
     ctx.fillStyle = '#4A2E1B';
@@ -2705,61 +2779,10 @@ function drawInventoryHotbar() {
     ctx.lineWidth = 4;
     ctx.strokeRect(slotX, slotY, slotSize, slotSize);
     
-    const name = ingredients[i].name;
-    if (inventory.includes(name)) {
-      const isAnimating = activeAnimations.some(anim => anim.type === 'collect_slide' && !anim.isBottle && anim.ingredientIndex === i);
-      if (!isAnimating) {
-        drawCabinetJar(ctx, ingredients[i], slotX + slotSize/2, slotY + slotSize/2, 4);
-      }
-    } else {
-      ctx.save();
-      ctx.globalAlpha = 0.15;
-      drawCabinetJar(ctx, ingredients[i], slotX + slotSize/2, slotY + slotSize/2, 4);
-      ctx.restore();
-    }
-  }
-  
-  // Row 2: Empty Bottles + Active Remedy (10 slots starting at 488)
-  for (let i = 0; i < 10; i++) {
-    const slotX = 488 + i * (slotSize + slotSpacing);
-    const slotY = hotbarY + 10 + slotSize + 12; // Shifted down 92px
-    
-    // Slot frame
-    ctx.fillStyle = '#4A2E1B';
-    ctx.fillRect(slotX, slotY, slotSize, slotSize);
-    
-    ctx.strokeStyle = '#1d1511';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(slotX, slotY, slotSize, slotSize);
-    
-    if (i < 9) {
-      // Draw Empty Bottles
-      const name = bottles[i].name;
-      if (inventory.includes(name)) {
-        const isAnimating = activeAnimations.some(anim => anim.type === 'collect_slide' && anim.isBottle && anim.ingredientIndex === i);
-        if (!isAnimating) {
-          drawCabinetJar(ctx, bottles[i], slotX + slotSize/2, slotY + slotSize/2, 4);
-        }
-      } else {
-        ctx.save();
-        ctx.globalAlpha = 0.15;
-        drawCabinetJar(ctx, bottles[i], slotX + slotSize/2, slotY + slotSize/2, 4);
-        ctx.restore();
-      }
-    } else {
-      // Draw Active Remedy (10th slot)
-      const hasRemedy = inventory.includes("Willow Bark Decoction");
-      const isAnimating = activeAnimations.some(anim => anim.type === 'collect_slide' && anim.name === 'Willow Bark Decoction');
-      
-      if (hasRemedy) {
-        if (!isAnimating) {
-          drawFlask(ctx, 'red', slotX - 4, slotY - 4);
-        }
-      } else {
-        ctx.save();
-        ctx.globalAlpha = 0.15;
-        drawFlask(ctx, 'red', slotX - 4, slotY - 4);
-        ctx.restore();
+    // Draw item in slot if exists, and not currently being dragged
+    if (i < inventory.length) {
+      if (draggedItemIndex !== i) {
+        drawInventoryItem(ctx, inventory[i], slotX + slotSize/2, slotY + slotSize/2, 4);
       }
     }
   }
@@ -2768,14 +2791,8 @@ function drawInventoryHotbar() {
 function drawActiveAnimations() {
   activeAnimations.forEach(anim => {
     if (anim.type === 'collect_slide') {
-      if (anim.name === 'Willow Bark Decoction') {
-        drawFlask(ctx, 'red', anim.x - 44, anim.y - 44);
-      } else {
-        const list = anim.isBottle ? bottles : ingredients;
-        const ing = list[anim.ingredientIndex];
-        const scale = 8 - 4 * anim.progress;
-        drawCabinetJar(ctx, ing, anim.x, anim.y, scale);
-      }
+      const scale = 8 - 4 * anim.progress;
+      drawInventoryItem(ctx, anim.itemName, anim.x, anim.y, scale);
     }
   });
 }
@@ -2844,10 +2861,6 @@ function openBookView(page = 1) {
   document.getElementById('book-ui').classList.remove('hidden');
   
   if (currentCustomerState === CustomerState.STEPS) {
-    const hudBookBtn = document.getElementById('hud-book-btn');
-    if (hudBookBtn) {
-      hudBookBtn.classList.remove('glow');
-    }
     hasOpenedBookInStepsState = true;
   }
   
@@ -2876,10 +2889,6 @@ function checkIngredientsCollected() {
   if (allPresent) {
     currentCustomerState = CustomerState.STEPS;
     updateObjective();
-    const hudBookBtn = document.getElementById('hud-book-btn');
-    if (hudBookBtn) {
-      hudBookBtn.classList.add('glow');
-    }
     hasOpenedBookInStepsState = false;
   }
 }
@@ -2928,6 +2937,24 @@ function renderBookPage() {
     nextBtn.classList.remove('hidden');
   }
 
+  // Helper to check if a recipe ingredient is in the player's inventory
+  function isIngredientInInventory(recipeIngString) {
+    const normalized = recipeIngString.toLowerCase();
+    if (normalized.includes("willow bark") && inventory.includes("Willow Bark")) return true;
+    if (normalized.includes("water") && inventory.includes("Water")) return true;
+    if (normalized.includes("beeswax") && inventory.includes("Beeswax")) return true;
+    if (normalized.includes("fat") && inventory.includes("Fats")) return true;
+    if (normalized.includes("herbal extract") && inventory.includes("Herbal Extract")) return true;
+    if (normalized.includes("tulsi") && inventory.includes("Tulsi")) return true;
+    if (normalized.includes("ginger") && inventory.includes("Ginger")) return true;
+    if (normalized.includes("long pepper") || normalized.includes("pippali") || normalized.includes("black pepper")) {
+      if (inventory.includes("Black Pepper")) return true;
+    }
+    if (normalized.includes("jaggery") && inventory.includes("Jaggery")) return true;
+    if (normalized.includes("honey") && inventory.includes("Honey")) return true;
+    return false;
+  }
+
   // Right Page HTML content
   const container = document.getElementById('right-page-content');
   container.innerHTML = `
@@ -2944,7 +2971,10 @@ function renderBookPage() {
     
     <h4 class="recipe-section-title">Ingredients</h4>
     <ul class="recipe-ingredients-list">
-      ${recipe.ingredients.map(ing => `<li>${ing}</li>`).join('')}
+      ${recipe.ingredients.map(ing => {
+        const isPresent = isIngredientInInventory(ing);
+        return `<li style="display: flex; align-items: center; gap: 8px;">${ing} ${isPresent ? '<span class="ing-check" style="font-size: 1.2rem;">✅</span>' : ''}</li>`;
+      }).join('')}
     </ul>
     
     <h4 class="recipe-section-title">Preparation Steps</h4>
@@ -3018,60 +3048,10 @@ function renderAcquiredRecipes() {
     
     badge.addEventListener('click', (e) => {
       e.stopPropagation();
-      openManuscriptView(page);
+      openBookView(page);
     });
     panel.appendChild(badge);
   });
-}
-
-function openManuscriptView(page) {
-  currentState = GameState.BOOK;
-  activeRecipePage = page;
-  interactionPrompt.classList.add('hidden');
-  document.getElementById('manuscript-ui').classList.remove('hidden');
-  renderManuscriptPage();
-}
-
-function closeManuscriptView() {
-  currentState = GameState.GAMEPLAY;
-  document.getElementById('manuscript-ui').classList.add('hidden');
-}
-
-function renderManuscriptPage() {
-  const recipe = recipes[activeRecipePage];
-  const container = document.getElementById('manuscript-page-content');
-  
-  container.innerHTML = `
-    <div class="recipe-header">
-      <h3 class="recipe-usage">${recipe.usage}</h3>
-      <h2 class="recipe-title">${recipe.title}</h2>
-      <div class="book-divider" style="background: #c2b59b; margin: 15px 0 20px;"></div>
-    </div>
-    
-    <h4 class="recipe-section-title">Ingredients</h4>
-    <ul class="recipe-ingredients-list">
-      ${recipe.ingredients.map(ing => `<li>${ing}</li>`).join('')}
-    </ul>
-    
-    <h4 class="recipe-section-title">Preparation Steps</h4>
-    <ol class="recipe-steps-list">
-      ${recipe.steps.map(step => `<li>${step}</li>`).join('')}
-    </ol>
-    
-    <div class="lets-make-container" style="padding-top: 30px;">
-      <button id="manuscript-unacquire-link" class="unacquire-link">Unacquire recipe</button>
-    </div>
-  `;
-
-  // Bind unacquire action
-  const unacquireLink = document.getElementById('manuscript-unacquire-link');
-  if (unacquireLink) {
-    unacquireLink.addEventListener('click', (e) => {
-      e.stopPropagation();
-      unacquireRecipe(activeRecipePage);
-      closeManuscriptView();
-    });
-  }
 }
 
 function initBookUIEvents() {
@@ -3100,10 +3080,6 @@ function initBookUIEvents() {
 
   // Background overlay clicks
   document.querySelector('.book-overlay-bg').addEventListener('click', closeBookView);
-  
-  // Manuscript close events
-  document.getElementById('manuscript-close-btn').addEventListener('click', closeManuscriptView);
-  document.querySelector('#manuscript-ui .book-overlay-bg').addEventListener('click', closeManuscriptView);
 }
 
 // Initialize book events on load

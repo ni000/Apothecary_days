@@ -645,7 +645,45 @@ body {
   position: relative;
   box-shadow: 4px 4px 0 rgba(29, 21, 17, 0.45);
   transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  animation: badgeScaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  animation: badgeScaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both, badge-gold-glow 2s infinite alternate ease-in-out;
+  overflow: hidden;
+}
+
+/* Sweeping diagonal light reflect line */
+.acquired-recipe-badge::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -100%;
+  width: 30%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  animation: badge-shine-sweep 4s infinite ease-in-out;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes badge-shine-sweep {
+  0% { left: -100%; }
+  25% { left: 150%; }
+  100% { left: 150%; }
+}
+
+@keyframes badge-gold-glow {
+  0% {
+    box-shadow: 4px 4px 0 rgba(29, 21, 17, 0.45), 0 0 5px rgba(212, 163, 115, 0.4);
+    border-color: #C5A059;
+  }
+  100% {
+    box-shadow: 4px 4px 0 rgba(29, 21, 17, 0.45), 0 0 20px rgba(212, 163, 115, 1), 0 0 25px rgba(255, 215, 0, 0.5);
+    border-color: #ffd700;
+  }
 }
 
 .acquired-recipe-badge:hover {
@@ -711,79 +749,7 @@ body {
   }
 }
 
-/* --- MANUSCRIPT PAGE OVERLAY SYSTEM --- */
-#manuscript-ui {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 150 !important;
-  pointer-events: auto !important;
-  opacity: 1;
-}
 
-.manuscript-container {
-  position: relative;
-  width: 480px;
-  height: 600px;
-  background: #8A1C1C; /* Dark red cover matching image 1 */
-  border: 10px solid #5C1212; /* Darker red leather edge */
-  border-radius: 16px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7),
-              inset 0 0 30px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  animation: bookScaleOpen 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-  overflow: visible;
-}
-
-.manuscript-page {
-  flex: 1;
-  padding: 30px 35px;
-  display: flex;
-  flex-direction: column;
-  color: #3e2e23;
-  overflow-y: auto;
-  position: relative;
-  background: #F5EBD0; /* Matching the parchment tone of image 1 */
-  border-radius: 4px;
-  box-shadow: inset 0 0 25px rgba(74, 59, 50, 0.2);
-}
-
-/* Corner brackets matching gold cover corners */
-.corner-bracket {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  border-color: #C5A059; /* Gold corner brackets */
-  border-style: solid;
-  border-width: 0;
-  pointer-events: none;
-  z-index: 5;
-}
-.corner-bracket.top-left {
-  top: -6px; left: -6px;
-  border-top-width: 6px;
-  border-left-width: 6px;
-  border-top-left-radius: 6px;
-}
-.corner-bracket.top-right {
-  top: -6px; right: -6px;
-  border-top-width: 6px;
-  border-right-width: 6px;
-  border-top-right-radius: 6px;
-}
-.corner-bracket.bottom-left {
-  bottom: -6px; left: -6px;
-  border-bottom-width: 6px;
-  border-left-width: 6px;
-  border-bottom-left-radius: 6px;
-}
-.corner-bracket.bottom-right {
-  bottom: -6px; right: -6px;
-  border-bottom-width: 6px;
-  border-right-width: 6px;
-  border-bottom-right-radius: 6px;
-}
 
 /* Badge styles overlay number */
 .badge-num {
@@ -813,29 +779,7 @@ body {
   transform: scale(1.05);
 }
 
-/* Recipe Book HUD button and Glow effect */
-.book-panel {
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-}
-.book-panel:hover {
-  transform: scale(1.05);
-  background: #fff8e7;
-}
-.book-panel.glow {
-  animation: book-glow-pulse 1.2s infinite alternate ease-in-out;
-  border-color: #d4a373; /* Gold border */
-}
 
-@keyframes book-glow-pulse {
-  0% {
-    box-shadow: 4px 4px 0 rgba(74, 59, 50, 0.2), 0 0 5px rgba(212, 163, 115, 0.5);
-    background: var(--soft-light);
-  }
-  100% {
-    box-shadow: 4px 4px 0 rgba(74, 59, 50, 0.2), 0 0 25px rgba(212, 163, 115, 1);
-    background: #ffe3a8;
-  }
-}
 
 /* Table of Contents Lookup Indicator */
 .index-item.lookup-indicator {

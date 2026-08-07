@@ -29,9 +29,6 @@
         <div class="hud-panel objective-panel">
           <span id="objective-text">Objective: Open Shop</span>
         </div>
-        <div id="hud-book-btn" class="hud-panel book-panel" style="cursor: pointer; pointer-events: auto;">
-          <span>📖 Recipe Book</span>
-        </div>
         <div class="hud-panel coin-panel">
           <span id="coin-text">🪙 150</span>
         </div>
@@ -95,26 +92,6 @@
         </div>
       </div>
 
-      <!-- Manuscript UI Overlay (Single Page View for Acquired Recipes) -->
-      <div id="manuscript-ui" class="overlay hidden">
-        <div class="book-overlay-bg"></div>
-        <div class="manuscript-container">
-          <!-- Gold Corners -->
-          <div class="corner-bracket top-left"></div>
-          <div class="corner-bracket top-right"></div>
-          <div class="corner-bracket bottom-left"></div>
-          <div class="corner-bracket bottom-right"></div>
-          
-          <!-- Close Button -->
-          <button id="manuscript-close-btn" class="book-close-btn" aria-label="Close Manuscript">&times;</button>
-          
-          <div class="manuscript-page">
-            <div class="page-content" id="manuscript-page-content">
-              <!-- Dynamically filled by JS -->
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- Acquired Recipes Container (Floating badges on the screen) -->
       <div id="acquired-recipes-container"></div>
