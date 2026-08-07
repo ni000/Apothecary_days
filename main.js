@@ -1057,6 +1057,26 @@ function drawSprite(ctx, spriteArray, colorMap, x, y, pixelScale) {
   }
 }
 
+function drawPlayerImage(ctx, x, y) {
+  let img = playerDownImg;
+  if (playerDirection === 'left') img = playerLeftImg;
+  else if (playerDirection === 'right') img = playerRightImg;
+  else if (playerDirection === 'up') img = playerUpImg;
+
+  if (img.complete) {
+    const scale = 0.82;
+    const imgWidth = img.naturalWidth * scale;
+    const imgHeight = img.naturalHeight * scale;
+    // Center horizontally on the player's collision box, align bottom
+    const drawX = x + (player.renderWidth - imgWidth) / 2;
+    const drawY = y + player.renderHeight - imgHeight;
+    ctx.drawImage(img, drawX, drawY, imgWidth, imgHeight);
+  } else {
+    // Fallback to original playerSprite drawing if image is not loaded
+    drawSprite(ctx, playerSprite, playerColorMap, x, y, pixelScale);
+  }
+}
+
 function getPotionColorMap(liquidColor) {
   return { ...potionColorMapTemplate, 'l': liquidColor };
 }
@@ -1079,6 +1099,22 @@ barrelImage.src = 'barrel.png';
 
 const pottedPlantImage = new Image();
 pottedPlantImage.src = 'potted_plant.png';
+
+// Load 4-directional player images
+const playerDownImg = new Image();
+playerDownImg.src = 'apothecary_down.png';
+
+const playerLeftImg = new Image();
+playerLeftImg.src = 'apothecary_left.png';
+
+const playerRightImg = new Image();
+playerRightImg.src = 'apothecary_right.png';
+
+const playerUpImg = new Image();
+playerUpImg.src = 'apothecary_up.png';
+
+let playerDirection = 'down'; // Track current player direction
+
 
 // Load custom flask images
 const flaskImages = {
@@ -1387,6 +1423,17 @@ function update(dt) {
       const length = Math.sqrt(dx * dx + dy * dy);
       dx /= length; dy /= length;
     }
+
+    if (dx !== 0 || dy !== 0) {
+      if (Math.abs(dy) >= Math.abs(dx)) {
+        if (dy > 0) playerDirection = 'down';
+        else if (dy < 0) playerDirection = 'up';
+      } else {
+        if (dx > 0) playerDirection = 'right';
+        else if (dx < 0) playerDirection = 'left';
+      }
+    }
+
     
     // Axis-aligned slide movement
     let targetX = player.x + dx * PLAYER_SPEED * dt;
@@ -2334,7 +2381,7 @@ function draw() {
     ctx.beginPath();
     ctx.ellipse(player.x + player.renderWidth/2, player.y + player.renderHeight, player.renderWidth/2, 10, 0, 0, Math.PI * 2);
     ctx.fill();
-    drawSprite(ctx, playerSprite, playerColorMap, player.x, player.y, pixelScale);
+    drawPlayerImage(ctx, player.x, player.y);
     
     // 3. Draw Wooden Counter, countertop items, and countertop light falloffs
     drawCounterAndItems();
@@ -3146,7 +3193,7 @@ function drawWorkroomEntities() {
         ctx.ellipse(player.x + player.renderWidth/2, player.y + player.renderHeight, player.renderWidth/2, 10, 0, 0, Math.PI * 2);
         ctx.fill();
         // Draw Player
-        drawSprite(ctx, playerSprite, playerColorMap, player.x, player.y, pixelScale);
+        drawPlayerImage(ctx, player.x, player.y);
       }
     }
   ];
