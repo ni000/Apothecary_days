@@ -813,3 +813,41 @@ body {
   transform: scale(1.05);
 }
 
+/* Recipe Book HUD button and Glow effect */
+.book-panel {
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.book-panel:hover {
+  transform: scale(1.05);
+  background: #fff8e7;
+}
+.book-panel.glow {
+  animation: book-glow-pulse 1.2s infinite alternate ease-in-out;
+  border-color: #d4a373; /* Gold border */
+}
+
+@keyframes book-glow-pulse {
+  0% {
+    box-shadow: 4px 4px 0 rgba(74, 59, 50, 0.2), 0 0 5px rgba(212, 163, 115, 0.5);
+    background: var(--soft-light);
+  }
+  100% {
+    box-shadow: 4px 4px 0 rgba(74, 59, 50, 0.2), 0 0 25px rgba(212, 163, 115, 1);
+    background: #ffe3a8;
+  }
+}
+
+/* Table of Contents Lookup Indicator */
+.index-item.lookup-indicator {
+  background: rgba(244, 192, 94, 0.25);
+  border: 2px dashed #F4C05E;
+  position: relative;
+  animation: lookup-pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes lookup-pulse {
+  0% { box-shadow: 0 0 5px rgba(244, 192, 94, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(244, 192, 94, 0.7); }
+  100% { box-shadow: 0 0 5px rgba(244, 192, 94, 0.3); }
+}
+

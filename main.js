@@ -14,6 +14,13 @@ const mainMenu = document.getElementById('main-menu');
 const exteriorBg = document.getElementById('exterior-bg');
 const interiorBg = document.getElementById('interior-bg');
 const hud = document.getElementById('hud');
+const hudBookBtn = document.getElementById('hud-book-btn');
+hudBookBtn.addEventListener('click', () => {
+  if (currentState === GameState.GAMEPLAY) {
+    const targetPage = activeAilmentType ? (ailmentToRecipePage[activeAilmentType] || 1) : 1;
+    openBookView(targetPage);
+  }
+});
 const dialogueUI = document.getElementById('dialogue-ui');
 const dialogueText = document.getElementById('dialogue-text');
 const dialoguePrompt = document.querySelector('.dialogue-prompt');
@@ -118,9 +125,27 @@ canvas.addEventListener('mousedown', (e) => {
         holdTime = 0;
       }
     }
-  } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.WORKROOM) {
+    // Check tap on Stove (x: [300, 420], y: [410, 476])
+    if (mouseCanvasX >= 300 && mouseCanvasX <= 420 && mouseCanvasY >= 410 && mouseCanvasY <= 476) {
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 360, 2) + Math.pow((player.y + player.renderHeight/2) - 443, 2));
+      const hasIngredients = inventory.includes("Willow Bark") && inventory.includes("Water");
+      const hasBottle = inventory.some(name => bottles.some(b => b.name === name));
+      if (dist < 250 && (currentCustomerState === CustomerState.STEPS || currentCustomerState === CustomerState.CRAFTING) && hasIngredients && hasBottle && !inventory.includes("Willow Bark Decoction")) {
+        activeHoldStove = true;
+        isBrewing = true;
+        brewingTime = 0;
+      }
+    }
+    // Check tap on Barrel (x: [670, 830], y: [383, 543])
+    else if (mouseCanvasX >= 670 && mouseCanvasX <= 830 && mouseCanvasY >= 383 && mouseCanvasY <= 543) {
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 750, 2) + Math.pow((player.y + player.renderHeight/2) - 463, 2));
+      if (dist < 250 && !inventory.includes('Water')) {
+        activeHoldBarrel = true;
+        holdTime = 0;
+      }
+    }
     // Check tap on Main Cabinet
-    if (mouseCanvasX >= 850 && mouseCanvasX <= 1070 && mouseCanvasY >= 100 && mouseCanvasY <= 543) {
+    else if (mouseCanvasX >= 850 && mouseCanvasX <= 1070 && mouseCanvasY >= 100 && mouseCanvasY <= 543) {
       const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 960, 2) + Math.pow((player.y + player.renderHeight/2) - 500, 2));
       if (dist < 250) {
         activeCabinet = 'INGREDIENT';
@@ -136,11 +161,42 @@ canvas.addEventListener('mousedown', (e) => {
       }
     }
   } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.SHOP) {
+    // Check tap on NPC
+    if (npc.active && npc.reachedCounter && mouseCanvasX >= npc.x && mouseCanvasX <= npc.x + npc.renderWidth && mouseCanvasY >= npc.y && mouseCanvasY <= npc.y + npc.renderHeight) {
+      const xDist = Math.abs((player.x + player.renderWidth/2) - (npc.x + npc.renderWidth/2));
+      const yDist = Math.abs((player.y + player.renderHeight/2) - (npc.y + npc.renderHeight/2));
+      if (xDist < 350 && yDist < 420) {
+        if (currentCustomerState === CustomerState.DELIVERY) {
+          activeDialogueString = "Ah, thank you! The pain is fading already. Here's your payment!";
+          startDialogue();
+          const remedyIndex = inventory.indexOf("Willow Bark Decoction");
+          if (remedyIndex > -1) inventory.splice(remedyIndex, 1);
+          updateCoins(100);
+          npc.reachedCounter = false;
+          npc.targetX = CANVAS_WIDTH + 200;
+          currentCustomerState = CustomerState.IDLE;
+          activeAilmentType = null;
+          isShopOpen = false;
+          updateObjective();
+        } else {
+          startDialogue();
+        }
+      }
+    }
     // Check tap on Book
-    if (mouseCanvasX >= 950 && mouseCanvasX <= 1046 && mouseCanvasY >= 496 && mouseCanvasY <= 520) {
+    else if (mouseCanvasX >= 950 && mouseCanvasX <= 1046 && mouseCanvasY >= 496 && mouseCanvasY <= 520) {
       const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 998, 2) + Math.pow((player.y + player.renderHeight/2) - 496, 2));
       if (dist < 250) {
-        openBookView();
+        if (currentCustomerState === CustomerState.IDLE) {
+          isShopOpen = true;
+          currentCustomerState = CustomerState.ARRIVAL;
+          updateObjective();
+          npc.active = true;
+          npc.reachedCounter = false;
+          npc.x = CANVAS_WIDTH + 100;
+        } else {
+          openBookView();
+        }
       }
     }
   }
@@ -169,9 +225,27 @@ canvas.addEventListener('touchstart', (e) => {
         holdTime = 0;
       }
     }
-  } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.WORKROOM) {
+    // Check tap on Stove (x: [300, 420], y: [410, 476])
+    if (mouseCanvasX >= 300 && mouseCanvasX <= 420 && mouseCanvasY >= 410 && mouseCanvasY <= 476) {
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 360, 2) + Math.pow((player.y + player.renderHeight/2) - 443, 2));
+      const hasIngredients = inventory.includes("Willow Bark") && inventory.includes("Water");
+      const hasBottle = inventory.some(name => bottles.some(b => b.name === name));
+      if (dist < 250 && (currentCustomerState === CustomerState.STEPS || currentCustomerState === CustomerState.CRAFTING) && hasIngredients && hasBottle && !inventory.includes("Willow Bark Decoction")) {
+        activeHoldStove = true;
+        isBrewing = true;
+        brewingTime = 0;
+      }
+    }
+    // Check tap on Barrel (x: [670, 830], y: [383, 543])
+    else if (mouseCanvasX >= 670 && mouseCanvasX <= 830 && mouseCanvasY >= 383 && mouseCanvasY <= 543) {
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 750, 2) + Math.pow((player.y + player.renderHeight/2) - 463, 2));
+      if (dist < 250 && !inventory.includes('Water')) {
+        activeHoldBarrel = true;
+        holdTime = 0;
+      }
+    }
     // Check tap on Main Cabinet
-    if (mouseCanvasX >= 850 && mouseCanvasX <= 1070 && mouseCanvasY >= 100 && mouseCanvasY <= 543) {
+    else if (mouseCanvasX >= 850 && mouseCanvasX <= 1070 && mouseCanvasY >= 100 && mouseCanvasY <= 543) {
       const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 960, 2) + Math.pow((player.y + player.renderHeight/2) - 500, 2));
       if (dist < 250) {
         activeCabinet = 'INGREDIENT';
@@ -187,11 +261,42 @@ canvas.addEventListener('touchstart', (e) => {
       }
     }
   } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.SHOP) {
+    // Check tap on NPC
+    if (npc.active && npc.reachedCounter && mouseCanvasX >= npc.x && mouseCanvasX <= npc.x + npc.renderWidth && mouseCanvasY >= npc.y && mouseCanvasY <= npc.y + npc.renderHeight) {
+      const xDist = Math.abs((player.x + player.renderWidth/2) - (npc.x + npc.renderWidth/2));
+      const yDist = Math.abs((player.y + player.renderHeight/2) - (npc.y + npc.renderHeight/2));
+      if (xDist < 350 && yDist < 420) {
+        if (currentCustomerState === CustomerState.DELIVERY) {
+          activeDialogueString = "Ah, thank you! The pain is fading already. Here's your payment!";
+          startDialogue();
+          const remedyIndex = inventory.indexOf("Willow Bark Decoction");
+          if (remedyIndex > -1) inventory.splice(remedyIndex, 1);
+          updateCoins(100);
+          npc.reachedCounter = false;
+          npc.targetX = CANVAS_WIDTH + 200;
+          currentCustomerState = CustomerState.IDLE;
+          activeAilmentType = null;
+          isShopOpen = false;
+          updateObjective();
+        } else {
+          startDialogue();
+        }
+      }
+    }
     // Check tap on Book
-    if (mouseCanvasX >= 950 && mouseCanvasX <= 1046 && mouseCanvasY >= 496 && mouseCanvasY <= 520) {
+    else if (mouseCanvasX >= 950 && mouseCanvasX <= 1046 && mouseCanvasY >= 496 && mouseCanvasY <= 520) {
       const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 998, 2) + Math.pow((player.y + player.renderHeight/2) - 496, 2));
       if (dist < 250) {
-        openBookView();
+        if (currentCustomerState === CustomerState.IDLE) {
+          isShopOpen = true;
+          currentCustomerState = CustomerState.ARRIVAL;
+          updateObjective();
+          npc.active = true;
+          npc.reachedCounter = false;
+          npc.x = CANVAS_WIDTH + 100;
+        } else {
+          openBookView();
+        }
       }
     }
   }
@@ -203,6 +308,15 @@ canvas.addEventListener('mouseup', () => {
     activeHoldJarIndex = null;
     holdTime = 0;
   }
+  if (activeHoldBarrel) {
+    activeHoldBarrel = false;
+    holdTime = 0;
+  }
+  if (activeHoldStove) {
+    activeHoldStove = false;
+    isBrewing = false;
+    brewingTime = 0;
+  }
 });
 
 canvas.addEventListener('touchend', () => {
@@ -210,6 +324,15 @@ canvas.addEventListener('touchend', () => {
   if (activeHoldJarIndex !== null && !keys.e) {
     activeHoldJarIndex = null;
     holdTime = 0;
+  }
+  if (activeHoldBarrel) {
+    activeHoldBarrel = false;
+    holdTime = 0;
+  }
+  if (activeHoldStove) {
+    activeHoldStove = false;
+    isBrewing = false;
+    brewingTime = 0;
   }
 });
 
@@ -452,6 +575,10 @@ let nextRoom = null;
 // Inventory & Collection
 let inventory = []; // Array of collected ingredient names
 let activeHoldJarIndex = null;
+let activeHoldBarrel = false;
+let activeHoldStove = false;
+let isBrewing = false;
+let brewingTime = 0;
 let holdTime = 0;
 let hoveredJarIndex = null;
 let mouseCanvasX = 0;
@@ -477,7 +604,8 @@ const ingredients = [
   
   { name: 'Jaggery', category: 'Sweeteners & Flavorings', color: '#784420', highlight: '#995f38', shadow: '#572d11', lid: '#381b07', lidHighlight: '#522b10' },
   { name: 'Black Pepper', category: 'Sweeteners & Flavorings', color: '#333333', highlight: '#555555', shadow: '#1a1a1a', lid: '#473d35', lidHighlight: '#61544a' },
-  { name: 'Honey', category: 'Sweeteners & Flavorings', color: '#d99011', highlight: '#ffbc42', shadow: '#a36603', lid: '#8c6239', lidHighlight: '#a3764b', isGlass: true }
+  { name: 'Honey', category: 'Sweeteners & Flavorings', color: '#d99011', highlight: '#ffbc42', shadow: '#a36603', lid: '#8c6239', lidHighlight: '#a3764b', isGlass: true },
+  { name: 'Water', category: 'Liquids', color: '#87ceeb', highlight: '#ffffff', shadow: '#4ba3e3', lid: '#8a5a36', lidHighlight: '#a87a56', isGlass: true }
 ];
 
 // Empty Bottles definitions
@@ -718,6 +846,7 @@ function checkCollision(x, y, width, height) {
     // Furniture obstacle bounding boxes in full-screen Workroom
     const obstacles = [
       { x: 300, y: 410, w: 120, h: 66 },   // Stove
+      { x: 670, y: 470, w: 160, h: 73 },   // Barrel
       { x: 850, y: 470, w: 220, h: 73 },   // Main Cabinet
       { x: 1460, y: 410, w: 120, h: 60 },  // Second Cabinet
       { x: 1590, y: 440, w: 120, h: 30 },  // Potted Plant
@@ -898,6 +1027,10 @@ snakePlantImage.src = 'snake_plant.png';
 const cabinetIngredientsImage = new Image();
 cabinetIngredientsImage.src = 'cabinet_ingredients.png';
 
+// Load custom barrel image
+const barrelImage = new Image();
+barrelImage.src = 'barrel.png';
+
 const pottedPlantImage = new Image();
 pottedPlantImage.src = 'potted_plant.png';
 
@@ -981,8 +1114,136 @@ const lightSources = [
   { type: 'candle', x: 1300 + 28, y: counterY - 88 + 20, radius: 50 }
 ];
 
+// Coins & Currency
+let coins = 150;
+function updateCoins(amount) {
+  coins += amount;
+  const element = document.getElementById('coin-text');
+  if (element) {
+    element.textContent = `🪙 ${coins}`;
+  }
+}
+
+// Customer Objective State Machine
+const CustomerState = {
+  IDLE: 0,        // STATE 0
+  ARRIVAL: 1,     // STATE 1
+  LOOKUP: 2,      // STATE 2
+  INGREDIENTS: 3, // STATE 3
+  STEPS: 4,       // STATE 4
+  CRAFTING: 5,    // STATE 5
+  DELIVERY: 6     // STATE 6
+};
+
+let currentCustomerState = CustomerState.IDLE;
+let activeAilmentType = null;
+let hasOpenedBookInStepsState = false;
+let isShopOpen = false;
+
+const ailmentToRecipePage = {
+  'PAIN': 1,
+  'WOUND_INFECTION': 2,
+  'CONGESTION': 3
+};
+
+const customerData = {
+  1: {
+    ailment: 'PAIN',
+    dialogue: "Aughh! My head hurts. Make anything that stops the pain, I'll pay you anything!",
+    recipePage: 1,
+    remedyName: "Willow Bark Decoction"
+  }
+};
+let activeCustomerNum = 1;
+let activeDialogueString = "Hello!";
+
+// Audio context and talk noise blip generator
+let audioCtx = null;
+function playBlipSound(char) {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    osc.type = 'triangle';
+    
+    const charCode = char.charCodeAt(0);
+    const pitchOffset = (charCode % 8) * 12;
+    osc.frequency.setValueAtTime(140 + pitchOffset, audioCtx.currentTime);
+    
+    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.07);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.075);
+  } catch (e) {
+    console.error('Audio error:', e);
+  }
+}
+
+// Objective Text update helper
+function updateObjective() {
+  const element = document.getElementById('objective-text');
+  if (!element) return;
+  
+  let text = "";
+  switch (currentCustomerState) {
+    case CustomerState.IDLE:
+    case CustomerState.ARRIVAL:
+      text = "Objective: Open Shop";
+      break;
+    case CustomerState.LOOKUP:
+      if (activeAilmentType === 'PAIN') {
+        text = "Objective: Check the recipe book: what relieves pain?";
+      } else if (activeAilmentType === 'CONGESTION') {
+        text = "Objective: Check the recipe book: what helps with congestion?";
+      } else if (activeAilmentType === 'WOUND_INFECTION') {
+        text = "Objective: Check the recipe book: what helps with wound infection?";
+      } else {
+        text = `Objective: Check the recipe book: what helps with ${activeAilmentType.toLowerCase()}?`;
+      }
+      break;
+    case CustomerState.INGREDIENTS:
+      const pageNum = ailmentToRecipePage[activeAilmentType];
+      if (pageNum === 1) {
+        text = "Objective: Collect ingredients: Willow Bark, Water";
+      } else if (pageNum === 2) {
+        text = "Objective: Collect ingredients: Beeswax, Fats, Herbal Extract";
+      } else if (pageNum === 3) {
+        text = "Objective: Collect ingredients: Tulsi, Ginger, Black Pepper, Jaggery, Honey";
+      } else {
+        text = "Objective: Collect ingredients";
+      }
+      break;
+    case CustomerState.STEPS:
+    case CustomerState.CRAFTING:
+      text = "Objective: Follow the steps in the recipe book";
+      break;
+    case CustomerState.DELIVERY:
+      if (activeAilmentType === 'PAIN') {
+        text = "Objective: Deliver the Willow Bark Decoction";
+      } else if (activeAilmentType === 'CONGESTION') {
+        text = "Objective: Deliver the Tulsi-Ginger Syrup";
+      } else if (activeAilmentType === 'WOUND_INFECTION') {
+        text = "Objective: Deliver the Healing Salve";
+      } else {
+        text = "Objective: Deliver the remedy";
+      }
+      break;
+  }
+  element.textContent = text;
+}
+
 // Dialogue System
-const dialogueString = "Hello! I'm looking for a Willow Bark Decoction.";
 let dialogueIndex = 0;
 let isTyping = false;
 let typeTimer = 0;
@@ -1006,7 +1267,8 @@ startBtn.addEventListener('click', () => {
       exteriorBg.classList.add('hidden');
       hud.classList.remove('hidden');
       currentState = GameState.GAMEPLAY;
-      setTimeout(() => { npc.active = true; }, 1000);
+      currentCustomerState = CustomerState.IDLE;
+      updateObjective();
     }, 500);
   }, 500);
 });
@@ -1114,8 +1376,15 @@ function update(dt) {
     // NPC & Book updates (only in Shop)
     if (currentRoom === RoomState.SHOP) {
       if (npc.active && !npc.reachedCounter) {
-        if (npc.x > npc.targetX) npc.x -= NPC_SPEED * dt;
-        else npc.reachedCounter = true;
+        if (Math.abs(npc.x - npc.targetX) > 5) {
+          const dir = Math.sign(npc.targetX - npc.x);
+          npc.x += dir * NPC_SPEED * dt;
+        } else {
+          npc.reachedCounter = true;
+          if (npc.targetX > CANVAS_WIDTH) {
+            npc.active = false;
+          }
+        }
       }
       
       const bookCenterX = 998;
@@ -1133,17 +1402,41 @@ function update(dt) {
       
       if (showNPCPrompt) {
         interactionPrompt.classList.remove('hidden');
-        interactionPrompt.textContent = "Press E";
+        if (currentCustomerState === CustomerState.DELIVERY) {
+          interactionPrompt.textContent = "Press E / Tap to Deliver Willow Bark Decoction";
+        } else {
+          interactionPrompt.textContent = "Press E / Tap to Talk";
+        }
         const containerRect = document.getElementById('game-container').getBoundingClientRect();
         const scaleX = containerRect.width / CANVAS_WIDTH;
         const scaleY = containerRect.height / CANVAS_HEIGHT;
         interactionPrompt.style.left = `${(npc.x + npc.renderWidth/2) * scaleX}px`;
         interactionPrompt.style.top = `${(npc.y) * scaleY}px`;
         
-        if (keysPressed.e) startDialogue();
+        if (keysPressed.e) {
+          if (currentCustomerState === CustomerState.DELIVERY) {
+            activeDialogueString = "Ah, thank you! The pain is fading already. Here's your payment!";
+            startDialogue();
+            const remedyIndex = inventory.indexOf("Willow Bark Decoction");
+            if (remedyIndex > -1) inventory.splice(remedyIndex, 1);
+            updateCoins(100);
+            npc.reachedCounter = false;
+            npc.targetX = CANVAS_WIDTH + 200;
+            currentCustomerState = CustomerState.IDLE;
+            activeAilmentType = null;
+            isShopOpen = false;
+            updateObjective();
+          } else {
+            startDialogue();
+          }
+        }
       } else if (distToBook < 180) {
         interactionPrompt.classList.remove('hidden');
-        interactionPrompt.textContent = "Press E / Tap to Read Book";
+        if (currentCustomerState === CustomerState.IDLE) {
+          interactionPrompt.textContent = "Press E / Tap to Open Shop";
+        } else {
+          interactionPrompt.textContent = "Press E / Tap to Read Book";
+        }
         const containerRect = document.getElementById('game-container').getBoundingClientRect();
         const scaleX = containerRect.width / CANVAS_WIDTH;
         const scaleY = containerRect.height / CANVAS_HEIGHT;
@@ -1151,7 +1444,16 @@ function update(dt) {
         interactionPrompt.style.top = `${400 * scaleY}px`;
         
         if (keysPressed.e) {
-          openBookView();
+          if (currentCustomerState === CustomerState.IDLE) {
+            isShopOpen = true;
+            currentCustomerState = CustomerState.ARRIVAL;
+            updateObjective();
+            npc.active = true;
+            npc.reachedCounter = false;
+            npc.x = CANVAS_WIDTH + 100;
+          } else {
+            openBookView();
+          }
         }
       } else {
         interactionPrompt.classList.add('hidden');
@@ -1164,14 +1466,26 @@ function update(dt) {
       const mainCenterY = 500;
       const bottleCenterX = 1520;
       const bottleCenterY = 440;
+      const barrelCenterX = 750;
+      const barrelCenterY = 463;
       
       const distToMain = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - mainCenterX, 2) + Math.pow((player.y + player.renderHeight/2) - mainCenterY, 2));
       const distToBottle = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - bottleCenterX, 2) + Math.pow((player.y + player.renderHeight/2) - bottleCenterY, 2));
+      const distToBarrel = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - barrelCenterX, 2) + Math.pow((player.y + player.renderHeight/2) - barrelCenterY, 2));
       
       let targetCabinet = null;
       let targetX = 0;
+      let isBarrelTarget = false;
       
-      if (distToMain < 180) {
+      if (distToBarrel < 180 && !inventory.includes('Water')) {
+        if (distToMain >= distToBarrel) {
+          isBarrelTarget = true;
+          targetX = barrelCenterX;
+        } else {
+          targetCabinet = 'INGREDIENT';
+          targetX = mainCenterX;
+        }
+      } else if (distToMain < 180) {
         targetCabinet = 'INGREDIENT';
         targetX = mainCenterX;
       } else if (distToBottle < 180) {
@@ -1179,7 +1493,16 @@ function update(dt) {
         targetX = bottleCenterX;
       }
       
-      if (targetCabinet !== null) {
+      if (isBarrelTarget) {
+        interactionPrompt.classList.remove('hidden');
+        interactionPrompt.textContent = "Hold E / Tap to Collect Water";
+        
+        const containerRect = document.getElementById('game-container').getBoundingClientRect();
+        const scaleX = containerRect.width / CANVAS_WIDTH;
+        const scaleY = containerRect.height / CANVAS_HEIGHT;
+        interactionPrompt.style.left = `${targetX * scaleX}px`;
+        interactionPrompt.style.top = `${280 * scaleY}px`;
+      } else if (targetCabinet !== null) {
         interactionPrompt.classList.remove('hidden');
         interactionPrompt.textContent = targetCabinet === 'INGREDIENT' ? "Press E / Tap to Open Ingredients" : "Press E / Tap to Open Bottle Storage";
         
@@ -1195,6 +1518,131 @@ function update(dt) {
         }
       } else {
         interactionPrompt.classList.add('hidden');
+      }
+
+      // Barrel Hold-to-Collect logic
+      const isHoldingEOnBarrel = (distToBarrel < 180 && keys.e && !inventory.includes('Water'));
+      const isHoldingMouseOnBarrel = (activeHoldBarrel && isMouseDown && !inventory.includes('Water'));
+      if (isHoldingEOnBarrel || isHoldingMouseOnBarrel) {
+        holdTime += dt;
+        if (holdTime >= 1.0) {
+          inventory.push('Water');
+          checkIngredientsCollected();
+          
+          const startX = 750;
+          const startY = 463;
+          const hotbarXStart = 488;
+          const hotbarY = 860;
+          const slotSize = 80;
+          const slotSpacing = 16;
+          const endX = hotbarXStart + 9 * (slotSize + slotSpacing) + slotSize/2;
+          const endY = hotbarY + 10 + slotSize/2;
+          
+          activeAnimations.push({
+            type: 'collect_slide',
+            ingredientIndex: 9,
+            isBottle: false,
+            startX: startX,
+            startY: startY,
+            x: startX,
+            y: startY,
+            endX: endX,
+            endY: endY,
+            progress: 0,
+            duration: 0.6
+          });
+          
+          holdTime = 0;
+          activeHoldBarrel = false;
+        }
+      } else {
+        if (holdTime > 0 && !activeHoldBarrel && !isHoldingEOnBarrel) {
+          holdTime = 0;
+        }
+      }
+      
+      // Stove Interaction logic (brewing)
+      const stoveCenterX = 360;
+      const stoveCenterY = 443;
+      const distToStove = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - stoveCenterX, 2) + Math.pow((player.y + player.renderHeight/2) - stoveCenterY, 2));
+      
+      const hasIngredients = inventory.includes("Willow Bark") && inventory.includes("Water");
+      const hasBottle = inventory.some(name => bottles.some(b => b.name === name));
+      const canBrew = (currentCustomerState === CustomerState.STEPS || currentCustomerState === CustomerState.CRAFTING) && hasIngredients && hasBottle && !inventory.includes("Willow Bark Decoction");
+      
+      if (distToStove < 180 && canBrew) {
+        interactionPrompt.classList.remove('hidden');
+        interactionPrompt.textContent = "Hold E / Tap to Brew Willow Bark Decoction";
+        const containerRect = document.getElementById('game-container').getBoundingClientRect();
+        const scaleX = containerRect.width / CANVAS_WIDTH;
+        const scaleY = containerRect.height / CANVAS_HEIGHT;
+        interactionPrompt.style.left = `${stoveCenterX * scaleX}px`;
+        interactionPrompt.style.top = `${360 * scaleY}px`;
+        
+        const isHoldingEOnStove = keys.e;
+        const isHoldingMouseOnStove = activeHoldStove && isMouseDown;
+        
+        if (isHoldingEOnStove || isHoldingMouseOnStove) {
+          isBrewing = true;
+          brewingTime += dt;
+          if (brewingTime >= 1.5) {
+            const emptyBottleName = inventory.find(name => bottles.some(b => b.name === name));
+            
+            // Consume ingredients
+            const willowIndex = inventory.indexOf("Willow Bark");
+            if (willowIndex > -1) inventory.splice(willowIndex, 1);
+            const waterIndex = inventory.indexOf("Water");
+            if (waterIndex > -1) inventory.splice(waterIndex, 1);
+            const bottleIndex = inventory.indexOf(emptyBottleName);
+            if (bottleIndex > -1) inventory.splice(bottleIndex, 1);
+            
+            // Add brewed remedy
+            inventory.push("Willow Bark Decoction");
+            
+            // Reset brewing
+            isBrewing = false;
+            brewingTime = 0;
+            activeHoldStove = false;
+            
+            // State machine progression
+            currentCustomerState = CustomerState.DELIVERY;
+            updateObjective();
+            
+            // Potion collection animation targets the 10th slot of row 2:
+            const hotbarXStart = 488;
+            const hotbarY = 860;
+            const slotSize = 80;
+            const slotSpacing = 16;
+            const endX = hotbarXStart + 9 * (slotSize + slotSpacing) + slotSize/2;
+            const endY = hotbarY + 10 + slotSize + 12 + slotSize/2;
+            
+            activeAnimations.push({
+              type: 'collect_slide',
+              name: 'Willow Bark Decoction',
+              startX: stoveCenterX,
+              startY: stoveCenterY,
+              x: stoveCenterX,
+              y: stoveCenterY,
+              endX: endX,
+              endY: endY,
+              progress: 0,
+              duration: 0.6
+            });
+          }
+        } else {
+          isBrewing = false;
+          brewingTime = 0;
+        }
+      } else if (distToStove < 180 && (currentCustomerState === CustomerState.STEPS || currentCustomerState === CustomerState.CRAFTING) && (!hasIngredients || !hasBottle)) {
+        interactionPrompt.classList.remove('hidden');
+        interactionPrompt.textContent = !hasIngredients ? "Missing ingredients (Willow Bark, Water)" : "Need an empty bottle";
+        const containerRect = document.getElementById('game-container').getBoundingClientRect();
+        const scaleX = containerRect.width / CANVAS_WIDTH;
+        const scaleY = containerRect.height / CANVAS_HEIGHT;
+        interactionPrompt.style.left = `${stoveCenterX * scaleX}px`;
+        interactionPrompt.style.top = `${360 * scaleY}px`;
+        isBrewing = false;
+        brewingTime = 0;
       }
       
       // Steam particle system updates (stove is at x=300)
@@ -1257,6 +1705,7 @@ function update(dt) {
       const ing = list[activeHoldJarIndex];
       if (!inventory.includes(ing.name)) {
         inventory.push(ing.name);
+        checkIngredientsCollected();
         
         // Slide animation values
         const r = Math.floor(activeHoldJarIndex / 3);
@@ -1266,8 +1715,8 @@ function update(dt) {
         const startX = colX[c];
         const startY = rowY[r];
         
-        const hotbarXStart = 536;
-        const hotbarY = 960;
+        const hotbarXStart = (activeCabinet === 'INGREDIENT') ? 488 : 536;
+        const hotbarY = 860;
         const slotSize = 80;
         const slotSpacing = 16;
         const endX = hotbarXStart + activeHoldJarIndex * (slotSize + slotSpacing) + slotSize/2;
@@ -1298,15 +1747,19 @@ function update(dt) {
       if (typeTimer >= typeDelay) {
         typeTimer = 0;
         dialogueIndex++;
-        dialogueText.textContent = dialogueString.substring(0, dialogueIndex);
-        if (dialogueIndex >= dialogueString.length) {
+        const nextChar = activeDialogueString[dialogueIndex - 1];
+        if (nextChar && nextChar !== ' ') {
+          playBlipSound(nextChar);
+        }
+        dialogueText.textContent = activeDialogueString.substring(0, dialogueIndex);
+        if (dialogueIndex >= activeDialogueString.length) {
           isTyping = false;
           dialoguePrompt.classList.remove('hidden');
         }
       }
       if (keysPressed.e) {
-        dialogueIndex = dialogueString.length;
-        dialogueText.textContent = dialogueString;
+        dialogueIndex = activeDialogueString.length;
+        dialogueText.textContent = activeDialogueString;
         isTyping = false;
         dialoguePrompt.classList.remove('hidden');
       }
@@ -1314,6 +1767,16 @@ function update(dt) {
       if (keysPressed.e) {
         dialogueUI.classList.add('hidden');
         currentState = GameState.GAMEPLAY;
+        
+        // State 1 -> State 2 Transition
+        if (currentCustomerState === CustomerState.ARRIVAL) {
+          const currentCustomer = customerData[activeCustomerNum];
+          if (currentCustomer) {
+            activeAilmentType = currentCustomer.ailment;
+          }
+          currentCustomerState = CustomerState.LOOKUP;
+          updateObjective();
+        }
       }
     }
   }
@@ -1327,6 +1790,9 @@ function startDialogue() {
   dialogueIndex = 0;
   isTyping = true;
   typeTimer = 0;
+  
+  const currentCustomer = customerData[activeCustomerNum];
+  activeDialogueString = currentCustomer ? currentCustomer.dialogue : "Hello!";
 }
 
 function drawBookImage(ctx, image, x, y, width, height, isHorizontal = false, isLeaning = false) {
@@ -1870,6 +2336,47 @@ function draw() {
     
     // 5. Glows
     drawWorkroomGlows();
+
+    // 6. Barrel progress indicator
+    const distToBarrel = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 750, 2) + Math.pow((player.y + player.renderHeight/2) - 463, 2));
+    const isHoldingEOnBarrel = (distToBarrel < 180 && keys.e && !inventory.includes('Water'));
+    const isHoldingMouseOnBarrel = (activeHoldBarrel && isMouseDown && !inventory.includes('Water'));
+    if (holdTime > 0 && (isHoldingEOnBarrel || isHoldingMouseOnBarrel)) {
+      const barrelCenterX = 750;
+      const barrelCenterY = 463;
+      const progress = holdTime / 1.0;
+      
+      ctx.beginPath();
+      ctx.arc(barrelCenterX, barrelCenterY, 70, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(29, 21, 17, 0.4)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.arc(barrelCenterX, barrelCenterY, 70, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+      ctx.strokeStyle = '#F4C05E'; // glowing gold Progress Arc
+      ctx.lineWidth = 8;
+      ctx.stroke();
+    }
+
+    // 7. Stove brewing progress indicator
+    if (isBrewing && brewingTime > 0) {
+      const stoveCenterX = 360;
+      const stoveCenterY = 443;
+      const progress = brewingTime / 1.5;
+      
+      ctx.beginPath();
+      ctx.arc(stoveCenterX, stoveCenterY, 70, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(29, 21, 17, 0.4)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.arc(stoveCenterX, stoveCenterY, 70, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+      ctx.strokeStyle = '#F4C05E'; // glowing gold Progress Arc
+      ctx.lineWidth = 8;
+      ctx.stroke();
+    }
   }
   
   // Cabinet View Overlay
@@ -1945,6 +2452,18 @@ function drawWorkroomEntities() {
       draw: () => {
         // Draw Stove (Y=310, bottom Y=486)
         drawSprite(ctx, stoveSprite, stoveColorMap, 300, 310, pixelScale);
+      }
+    },
+    {
+      y: 543,
+      draw: () => {
+        // Draw Barrel (Y=383, bottom Y=543, size: 160x160)
+        if (barrelImage.complete) {
+          ctx.drawImage(barrelImage, 670, 383, 160, 160);
+        } else {
+          ctx.fillStyle = '#8C6239';
+          ctx.fillRect(670, 383, 160, 160);
+        }
       }
     },
     {
@@ -2162,20 +2681,20 @@ const slotSize = 80;
 const slotSpacing = 16;
 
 function drawInventoryHotbar() {
-  // Wooden plank backer (holds 2 rows, height 200px)
+  // Wooden plank backer (holds 2 rows, height 200px, width 984px to fit 10 slots centered)
   ctx.fillStyle = '#8C6239';
-  ctx.fillRect(516, 860, 888, 200);
+  ctx.fillRect(468, 860, 984, 200);
   
   ctx.strokeStyle = '#1d1511';
   ctx.lineWidth = 6;
-  ctx.strokeRect(516, 860, 888, 200);
+  ctx.strokeRect(468, 860, 984, 200);
   
   ctx.fillStyle = '#C89A6A';
-  ctx.fillRect(516, 862, 888, 4);
+  ctx.fillRect(468, 862, 984, 4);
   
-  // Row 1: Ingredients
-  for (let i = 0; i < 9; i++) {
-    const slotX = hotbarXStart + i * (slotSize + slotSpacing);
+  // Row 1: Ingredients (10 slots starting at 488)
+  for (let i = 0; i < 10; i++) {
+    const slotX = 488 + i * (slotSize + slotSpacing);
     const slotY = hotbarY + 10;
     
     // Slot frame
@@ -2200,9 +2719,9 @@ function drawInventoryHotbar() {
     }
   }
   
-  // Row 2: Empty Bottles
-  for (let i = 0; i < 9; i++) {
-    const slotX = hotbarXStart + i * (slotSize + slotSpacing);
+  // Row 2: Empty Bottles + Active Remedy (10 slots starting at 488)
+  for (let i = 0; i < 10; i++) {
+    const slotX = 488 + i * (slotSize + slotSpacing);
     const slotY = hotbarY + 10 + slotSize + 12; // Shifted down 92px
     
     // Slot frame
@@ -2213,17 +2732,35 @@ function drawInventoryHotbar() {
     ctx.lineWidth = 4;
     ctx.strokeRect(slotX, slotY, slotSize, slotSize);
     
-    const name = bottles[i].name;
-    if (inventory.includes(name)) {
-      const isAnimating = activeAnimations.some(anim => anim.type === 'collect_slide' && anim.isBottle && anim.ingredientIndex === i);
-      if (!isAnimating) {
+    if (i < 9) {
+      // Draw Empty Bottles
+      const name = bottles[i].name;
+      if (inventory.includes(name)) {
+        const isAnimating = activeAnimations.some(anim => anim.type === 'collect_slide' && anim.isBottle && anim.ingredientIndex === i);
+        if (!isAnimating) {
+          drawCabinetJar(ctx, bottles[i], slotX + slotSize/2, slotY + slotSize/2, 4);
+        }
+      } else {
+        ctx.save();
+        ctx.globalAlpha = 0.15;
         drawCabinetJar(ctx, bottles[i], slotX + slotSize/2, slotY + slotSize/2, 4);
+        ctx.restore();
       }
     } else {
-      ctx.save();
-      ctx.globalAlpha = 0.15;
-      drawCabinetJar(ctx, bottles[i], slotX + slotSize/2, slotY + slotSize/2, 4);
-      ctx.restore();
+      // Draw Active Remedy (10th slot)
+      const hasRemedy = inventory.includes("Willow Bark Decoction");
+      const isAnimating = activeAnimations.some(anim => anim.type === 'collect_slide' && anim.name === 'Willow Bark Decoction');
+      
+      if (hasRemedy) {
+        if (!isAnimating) {
+          drawFlask(ctx, 'red', slotX - 4, slotY - 4);
+        }
+      } else {
+        ctx.save();
+        ctx.globalAlpha = 0.15;
+        drawFlask(ctx, 'red', slotX - 4, slotY - 4);
+        ctx.restore();
+      }
     }
   }
 }
@@ -2231,10 +2768,14 @@ function drawInventoryHotbar() {
 function drawActiveAnimations() {
   activeAnimations.forEach(anim => {
     if (anim.type === 'collect_slide') {
-      const list = anim.isBottle ? bottles : ingredients;
-      const ing = list[anim.ingredientIndex];
-      const scale = 8 - 4 * anim.progress;
-      drawCabinetJar(ctx, ing, anim.x, anim.y, scale);
+      if (anim.name === 'Willow Bark Decoction') {
+        drawFlask(ctx, 'red', anim.x - 44, anim.y - 44);
+      } else {
+        const list = anim.isBottle ? bottles : ingredients;
+        const ing = list[anim.ingredientIndex];
+        const scale = 8 - 4 * anim.progress;
+        drawCabinetJar(ctx, ing, anim.x, anim.y, scale);
+      }
     }
   });
 }
@@ -2301,6 +2842,15 @@ function openBookView(page = 1) {
   activeRecipePage = page;
   interactionPrompt.classList.add('hidden');
   document.getElementById('book-ui').classList.remove('hidden');
+  
+  if (currentCustomerState === CustomerState.STEPS) {
+    const hudBookBtn = document.getElementById('hud-book-btn');
+    if (hudBookBtn) {
+      hudBookBtn.classList.remove('glow');
+    }
+    hasOpenedBookInStepsState = true;
+  }
+  
   renderBookPage();
 }
 
@@ -2309,9 +2859,35 @@ function closeBookView() {
   document.getElementById('book-ui').classList.add('hidden');
 }
 
+function checkIngredientsCollected() {
+  if (currentCustomerState !== CustomerState.INGREDIENTS) return;
+  
+  const targetPage = ailmentToRecipePage[activeAilmentType];
+  const recipeIngredientsMap = {
+    1: ["Willow Bark", "Water"],
+    2: ["Beeswax", "Fats", "Herbal Extract"],
+    3: ["Tulsi", "Ginger", "Black Pepper", "Jaggery", "Honey"]
+  };
+  
+  const reqList = recipeIngredientsMap[targetPage];
+  if (!reqList) return;
+  
+  const allPresent = reqList.every(ingName => inventory.includes(ingName));
+  if (allPresent) {
+    currentCustomerState = CustomerState.STEPS;
+    updateObjective();
+    const hudBookBtn = document.getElementById('hud-book-btn');
+    if (hudBookBtn) {
+      hudBookBtn.classList.add('glow');
+    }
+    hasOpenedBookInStepsState = false;
+  }
+}
+
 function renderBookPage() {
   const recipe = recipes[activeRecipePage];
   const isAcquired = acquiredRecipes.includes(activeRecipePage);
+  const targetPage = ailmentToRecipePage[activeAilmentType];
   
   // Highlight active page in Left Page Index
   document.querySelectorAll('.recipe-index .index-item').forEach(item => {
@@ -2321,7 +2897,22 @@ function renderBookPage() {
     } else {
       item.classList.remove('active');
     }
+    
+    // Page lookup indicator (STATE 2)
+    if (currentCustomerState === CustomerState.LOOKUP && pageNum === targetPage) {
+      item.classList.add('lookup-indicator');
+    } else {
+      item.classList.remove('lookup-indicator');
+    }
   });
+
+  // State 2 -> State 3 Transition on correct page opened
+  if (currentCustomerState === CustomerState.LOOKUP && activeRecipePage === targetPage) {
+    acquireRecipe(targetPage);
+    currentCustomerState = CustomerState.INGREDIENTS;
+    updateObjective();
+    checkIngredientsCollected();
+  }
 
   // Render navigation button visibility
   const prevBtn = document.getElementById('book-prev-btn');
