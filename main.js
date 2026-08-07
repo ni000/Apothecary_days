@@ -838,22 +838,22 @@ const stoveColorMap = {
 
 // Worktable Sprite (32x16)
 const worktableSprite = [
-  "................................",
-  ".....k..........................",
-  "....kmk........k.kk.............",
-  "....kmk.k.....kppk.k.....kkkk...",
-  "....kmmkk.k...kppk.k....kcccck..",
-  "....kmmmpkk...kkkk.k....kcoock..",
-  "....kkkkkkk...kdddkk....kcccck..",
-  "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk",
-  "khhhhhhhhhhhhhhhhhhhhhhhhhhhhhsk",
+  "....kkkkkkkkkkkkkkkkkkkkkkkk....",
+  "...khhhhhhhhhhhhhhhhhhhhhhhhsk..",
+  "..kHwwwwwwwwwwwwwwwwwwwwwwwwsk..",
+  ".kHHHHHHHHHHHHHHHHHHHHHHHHHHHsk.",
+  "kHhhhhhhhhhhhhhhhhhhhhhhhhhhhhsk",
   "kHwwwwwwwwwwwwwwwwwwwwwwwwwwwwsk",
-  "kHwkkkwwkkkkkkkkkkkkkkwwkkkwwwsk",
-  "kHwk.kwwk............kwwk.kwwwsk",
-  "kHwk.kwwk............kwwk.kwwwsk",
-  "kHwk.kwwk............kwwk.kwwwsk",
-  "kHwkskssk............ksksskwwwsk",
-  "kkkkkkkkk............kkkkkkkkkkk"
+  "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk",
+  "..kwkhppdhkwksssssskwkhppdhkwk..",
+  "..kwkhhhhhkwksssssskwkhhhhhkwk..",
+  "..kkkkkkkkkkksssssskkkkkkkkkkk..",
+  "..kwkhppdhkwksssssskwkhhhhhkwk..",
+  "..kwkhhhhhkwk......kwkppdhhkwk..",
+  "..kkkkkkkkkkk......kwkppdhhkwk..",
+  "..kwkhppdhkwk......kwkppdhhkwk..",
+  "..kwkhhhhhkwk......kwkhhhhhkwk..",
+  "..kkkkkkkkkkk......kkkkkkkkkkk.."
 ];
 const worktableColorMap = {
   'k': '#1d1511', // outline
@@ -2455,13 +2455,314 @@ function draw() {
 
 // --- WORKROOM RENDER HELPERS ---
 
-function drawWorkroomBackground() {
-  // 1. Draw outer backdrop color (wall background)
-  ctx.fillStyle = '#3E2F25';
-  ctx.fillRect(0, 0, CANVAS_WIDTH, 500);
+// --- WORKROOM DETAILED ART RENDERING HELPERS ---
+
+function drawShelfBottle(ctx, x, y, width, height, liquidColor) {
+  // Bottle outline
+  ctx.fillStyle = '#1B130E';
+  ctx.fillRect(x, y, width, height);
+  // Bottle body (glass highlights)
+  ctx.fillStyle = '#E5DEC9';
+  ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
+  // Liquid content
+  if (liquidColor) {
+    ctx.fillStyle = liquidColor;
+    ctx.fillRect(x + 2, y + Math.floor(height / 2), width - 4, Math.floor(height / 2) - 2);
+    // Liquid shine
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.fillRect(x + 3, y + Math.floor(height / 2) + 2, 2, 2);
+  }
+}
+
+function drawShelfBook(ctx, x, y, width, height, color, slant = 0) {
+  ctx.save();
+  ctx.translate(x, y);
+  if (slant !== 0) {
+    ctx.rotate(slant);
+  }
+  // Outline
+  ctx.fillStyle = '#1B130E';
+  ctx.fillRect(0, 0, width, height);
+  // Book spine
+  ctx.fillStyle = color;
+  ctx.fillRect(2, 2, width - 4, height - 4);
+  // Page lines or details
+  ctx.fillStyle = '#D9C1A0';
+  ctx.fillRect(4, 5, width - 8, 3);
+  ctx.fillRect(4, height - 8, width - 8, 3);
+  ctx.restore();
+}
+
+function drawShelfMortar(ctx, x, y) {
+  // Bowl shape
+  ctx.fillStyle = '#1B130E';
+  ctx.fillRect(x, y + 8, 20, 12);
+  ctx.fillStyle = '#808080'; // Grey stone bowl
+  ctx.fillRect(x + 2, y + 10, 16, 8);
+  // Bowl top lip
+  ctx.fillStyle = '#1B130E';
+  ctx.fillRect(x - 2, y + 6, 24, 4);
+  ctx.fillStyle = '#A0A0A0';
+  ctx.fillRect(x, y + 8, 20, 2);
+  // Pestle
+  ctx.strokeStyle = '#1B130E';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(x + 16, y);
+  ctx.lineTo(x + 6, y + 12);
+  ctx.stroke();
   
+  ctx.strokeStyle = '#D0D0D0';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x + 16, y);
+  ctx.lineTo(x + 6, y + 12);
+  ctx.stroke();
+}
+
+function drawShelfBalance(ctx, x, y) {
+  ctx.strokeStyle = '#1B130E';
+  ctx.lineWidth = 4;
+  // Outline center stand
+  ctx.beginPath();
+  ctx.moveTo(x + 12, y + 20);
+  ctx.lineTo(x + 12, y + 2);
+  ctx.stroke();
+  // Outline cross beam
+  ctx.beginPath();
+  ctx.moveTo(x + 2, y + 5);
+  ctx.lineTo(x + 22, y + 5);
+  ctx.stroke();
+
+  ctx.strokeStyle = '#D9C1A0'; // Gold/brass color
+  ctx.lineWidth = 2;
+  // Center stand
+  ctx.beginPath();
+  ctx.moveTo(x + 12, y + 20);
+  ctx.lineTo(x + 12, y + 2);
+  ctx.stroke();
+  // Cross beam
+  ctx.beginPath();
+  ctx.moveTo(x + 2, y + 5);
+  ctx.lineTo(x + 22, y + 5);
+  ctx.stroke();
+
+  // Left pan
+  ctx.strokeStyle = '#1B130E';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x + 3, y + 5);
+  ctx.lineTo(x + 3, y + 15);
+  ctx.stroke();
+  ctx.strokeStyle = '#D9C1A0';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x + 3, y + 5);
+  ctx.lineTo(x + 3, y + 15);
+  ctx.stroke();
+  ctx.fillStyle = '#1B130E';
+  ctx.fillRect(x + 1, y + 14, 5, 3);
+  ctx.fillStyle = '#D9C1A0';
+  ctx.fillRect(x + 2, y + 15, 3, 1);
+
+  // Right pan
+  ctx.strokeStyle = '#1B130E';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x + 21, y + 5);
+  ctx.lineTo(x + 21, y + 15);
+  ctx.stroke();
+  ctx.strokeStyle = '#D9C1A0';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x + 21, y + 5);
+  ctx.lineTo(x + 21, y + 15);
+  ctx.stroke();
+  ctx.fillStyle = '#1B130E';
+  ctx.fillRect(x + 19, y + 14, 5, 3);
+  ctx.fillStyle = '#D9C1A0';
+  ctx.fillRect(x + 20, y + 15, 3, 1);
+}
+
+function drawShelfCactus(ctx, x, y) {
+  // Pot
+  ctx.fillStyle = '#1B130E';
+  ctx.fillRect(x + 2, y + 10, 16, 10);
+  ctx.fillStyle = '#AC7A52'; // terracotta pot
+  ctx.fillRect(x + 4, y + 12, 12, 7);
+  ctx.fillStyle = '#8B5E3C'; // dark soil rim
+  ctx.fillRect(x + 3, y + 10, 14, 2);
+
+  // Cactus green
+  ctx.fillStyle = '#1B130E';
+  ctx.fillRect(x + 7, y + 1, 6, 9);
+  ctx.fillRect(x + 4, y + 3, 5, 5);
+  ctx.fillRect(x + 11, y + 4, 5, 4);
+
+  ctx.fillStyle = '#2E7D32'; // cactus main green
+  ctx.fillRect(x + 8, y + 2, 4, 8);
+  ctx.fillRect(x + 5, y + 4, 3, 3);
+  ctx.fillRect(x + 12, y + 5, 3, 2);
+}
+
+function drawShelfScrollStack(ctx, x, y) {
+  const drawScroll = (sx, sy) => {
+    ctx.fillStyle = '#1B130E';
+    ctx.fillRect(sx, sy, 26, 9);
+    ctx.fillStyle = '#F0E4CC'; // aged paper
+    ctx.fillRect(sx + 1, sy + 1, 24, 7);
+    ctx.fillStyle = '#C0392B'; // red ribbon tie
+    ctx.fillRect(sx + 11, sy + 1, 4, 7);
+  };
+  drawScroll(x, y + 11);
+  drawScroll(x + 5, y + 4);
+}
+
+function drawPinnedPaper(ctx, x, y) {
+  // Shadow
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+  ctx.fillRect(x + 2, y + 2, 44, 56);
+  // Paper
+  ctx.fillStyle = '#E5DEC9';
+  ctx.fillRect(x, y, 44, 56);
+  ctx.strokeStyle = '#9A8E72';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, 44, 56);
+
+  // Pin
+  ctx.fillStyle = '#555555';
+  ctx.fillRect(x + 20, y - 3, 4, 4);
+
+  // Cursive writing lines
+  ctx.fillStyle = '#5A4E3B';
+  ctx.fillRect(x + 6, y + 12, 32, 2);
+  ctx.fillRect(x + 6, y + 20, 26, 2);
+  ctx.fillRect(x + 6, y + 28, 30, 2);
+  ctx.fillRect(x + 6, y + 36, 16, 2);
+
+  // Tiny sketch
+  ctx.fillStyle = '#556B2F'; // green leaf
+  ctx.fillRect(x + 24, y + 36, 4, 4);
+  ctx.fillRect(x + 26, y + 38, 4, 4);
+  ctx.fillRect(x + 28, y + 42, 6, 2);
+}
+
+function drawHangingHerbs(ctx, x, y) {
+  // Nail/peg
+  ctx.fillStyle = '#4A3B32';
+  ctx.fillRect(x - 2, y - 2, 4, 4);
+
+  // Hanging string
+  ctx.strokeStyle = '#8C6239';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x, y + 15);
+  ctx.stroke();
+
+  // Herb bundle silhouette outline
+  ctx.fillStyle = '#1D1511';
+  ctx.fillRect(x - 10, y + 14, 20, 48);
+
+  // Herb leaves (varying shades of green and purple)
+  ctx.fillStyle = '#556B2F'; // olive green
+  ctx.fillRect(x - 8, y + 16, 16, 24);
+  ctx.fillStyle = '#8FBC8F'; // light sage green
+  ctx.fillRect(x - 5, y + 24, 10, 20);
+  ctx.fillStyle = '#8A739C'; // lavender flowers
+  ctx.fillRect(x - 6, y + 32, 12, 28);
+  ctx.fillRect(x - 4, y + 44, 8, 16);
+}
+
+function drawStoneChimney(ctx) {
+  const startX = 250;
+  const endX = 470;
+  const width = endX - startX;
+  const wallH = 500;
+
+  // Base chimney fill
+  ctx.fillStyle = '#4A3E36';
+  ctx.fillRect(startX, 0, width, wallH);
+
+  // Draw individual bricks
+  const rowHeight = 20;
+  for (let y = 0; y < wallH; y += rowHeight) {
+    const isEven = (y / rowHeight) % 2 === 0;
+    const offset = isEven ? 0 : 25;
+
+    for (let x = startX - 25; x < endX + 25; x += 50) {
+      const bx = x + offset;
+      const drawX = Math.max(startX, bx);
+      const drawW = Math.min(endX, bx + 50) - drawX;
+
+      if (drawW <= 0) continue;
+
+      const seed = Math.sin(drawX * 0.05 + y * 0.1) * 10000;
+      const rand = seed - Math.floor(seed);
+
+      let brickColor = '#4F433B';
+      if (rand < 0.15) brickColor = '#3C322C';
+      else if (rand < 0.3) brickColor = '#5E4A40';
+      else if (rand < 0.45) brickColor = '#5F524A';
+
+      ctx.fillStyle = brickColor;
+      ctx.fillRect(drawX, y, drawW, rowHeight);
+
+      // Brick mortar line
+      ctx.strokeStyle = '#27201C';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(drawX, y + rowHeight);
+      ctx.lineTo(drawX + drawW, y + rowHeight);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(drawX + drawW, y);
+      ctx.lineTo(drawX + drawW, y + rowHeight);
+      ctx.stroke();
+
+      // Brick highlight edges
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(drawX + 1, y + rowHeight - 1);
+      ctx.lineTo(drawX + 1, y + 1);
+      ctx.lineTo(drawX + drawW - 1, y + 1);
+      ctx.stroke();
+    }
+  }
+
+  // Border pillars
+  ctx.fillStyle = '#3C322C';
+  ctx.fillRect(startX - 8, 0, 8, wallH);
+  ctx.fillRect(endX, 0, 8, wallH);
+
+  ctx.fillStyle = '#5A4A40';
+  ctx.fillRect(startX - 6, 0, 2, wallH);
+  ctx.fillRect(endX + 4, 0, 2, wallH);
+
+  ctx.strokeStyle = '#27201C';
+  ctx.lineWidth = 2;
+  for (let y = 0; y < wallH; y += 40) {
+    ctx.beginPath();
+    ctx.moveTo(startX - 8, y);
+    ctx.lineTo(startX, y);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(endX, y);
+    ctx.lineTo(endX + 8, y);
+    ctx.stroke();
+  }
+}
+
+function drawWorkroomBackground() {
+  // 1. Draw outer backdrop color (paneled wall background)
+  ctx.fillStyle = '#2A1E17'; // Rich dark wood tone
+  ctx.fillRect(0, 0, CANVAS_WIDTH, 500);
+
   // Wall panel vertical lines
-  ctx.strokeStyle = '#2F231B';
+  ctx.strokeStyle = '#1B130E'; // Dark panel shadow lines
   ctx.lineWidth = 4;
   for (let x = 120; x < CANVAS_WIDTH; x += 240) {
     ctx.beginPath();
@@ -2469,28 +2770,286 @@ function drawWorkroomBackground() {
     ctx.lineTo(x, 500);
     ctx.stroke();
   }
+
+  // Highlight line next to the shadow lines for depth
+  ctx.strokeStyle = '#3E2D23';
+  ctx.lineWidth = 2;
+  for (let x = 122; x < CANVAS_WIDTH; x += 240) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, 500);
+    ctx.stroke();
+  }
+
+  // Draw wainscoting horizontal beam at Y=380
+  ctx.fillStyle = '#3E2F25';
+  ctx.fillRect(0, 380, CANVAS_WIDTH, 24);
+  // Highlight
+  ctx.fillStyle = '#5A4233';
+  ctx.fillRect(0, 380, CANVAS_WIDTH, 3);
+  // Shadow
+  ctx.fillStyle = '#1D140F';
+  ctx.fillRect(0, 401, CANVAS_WIDTH, 3);
+  // Wainscoting panel seams below the beam
+  ctx.strokeStyle = '#1D140F';
+  ctx.lineWidth = 2;
+  for (let x = 60; x < CANVAS_WIDTH; x += 120) {
+    ctx.beginPath();
+    ctx.moveTo(x, 404);
+    ctx.lineTo(x, 500);
+    ctx.stroke();
+  }
+
+  // 2. Draw Stone Chimney behind the Stove
+  drawStoneChimney(ctx);
+
+  // 3. Draw Background wall decorations
+  // Pinned Recipe sheets
+  drawPinnedPaper(ctx, 510, 90);
+  drawPinnedPaper(ctx, 1120, 80);
+
+  // Hanging Herbs
+  drawHangingHerbs(ctx, 580, 70);
+  drawHangingHerbs(ctx, 620, 75);
+
+  // 4. Draw Background Shelves
+  const drawShelfBoard = (x, y, w) => {
+    // Shelf outline
+    ctx.fillStyle = '#1B130E';
+    ctx.fillRect(x - 2, y, w + 4, 16);
+    // Shelf wood body
+    ctx.fillStyle = '#5A3E2B';
+    ctx.fillRect(x, y + 2, w, 12);
+    // Top highlight
+    ctx.fillStyle = '#80593E';
+    ctx.fillRect(x, y + 2, w, 3);
+    // Bottom shadow
+    ctx.fillStyle = '#3B281B';
+    ctx.fillRect(x, y + 11, w, 3);
+    // Metal Brackets/supports underneath
+    ctx.fillStyle = '#2F2F2F';
+    ctx.fillRect(x + 12, y + 16, 6, 12);
+    ctx.fillRect(x + w - 18, y + 16, 6, 12);
+  };
+
+  // Shelf A: Left wall (X=24 to 230)
+  drawShelfBoard(24, 220, 206);
+  drawShelfBoard(24, 340, 206);
+
+  // Shelf A1 Items
+  drawShelfBottle(ctx, 40, 192, 10, 28, 'rgba(46, 204, 113, 0.85)'); // green
+  drawShelfBottle(ctx, 55, 196, 12, 24, 'rgba(231, 76, 60, 0.85)');  // red
+  drawShelfBook(ctx, 80, 172, 12, 48, '#8E44AD'); // purple book
+  drawShelfBook(ctx, 95, 172, 14, 48, '#D35400', 0.12); // tilted brown book
+  drawShelfScrollStack(ctx, 130, 200);
+  drawShelfBalance(ctx, 170, 200);
+
+  // Shelf A2 Items
+  drawShelfCactus(ctx, 40, 320);
+  drawShelfMortar(ctx, 75, 320);
+  drawShelfBottle(ctx, 105, 312, 12, 28, 'rgba(52, 152, 219, 0.85)'); // blue
+  drawShelfBottle(ctx, 122, 316, 10, 24, 'rgba(155, 89, 182, 0.85)'); // purple
+  drawShelfBottle(ctx, 137, 312, 14, 28, 'rgba(241, 196, 15, 0.85)'); // gold/yellow
+  drawShelfBook(ctx, 165, 292, 12, 48, '#27AE60'); // green book
+  drawShelfBook(ctx, 180, 292, 10, 48, '#2C3E50'); // dark blue book
+
+  // Shelf B: Mid wall (X=490 to 650)
+  drawShelfBoard(490, 220, 160);
+  drawShelfBook(ctx, 505, 172, 12, 48, '#C0392B'); // red book
+  drawShelfBook(ctx, 520, 172, 14, 48, '#7F8C8D'); // grey book
+  drawShelfCactus(ctx, 545, 200);
+  drawShelfBottle(ctx, 580, 192, 12, 28, 'rgba(52, 152, 219, 0.85)'); // blue
+  drawShelfBottle(ctx, 597, 196, 10, 24, 'rgba(235, 104, 160, 0.85)'); // pink
+  drawShelfBottle(ctx, 612, 192, 14, 28, 'rgba(241, 196, 15, 0.85)'); // yellow
+
+  // Shelf C: Right wall (X=1090 to 1430)
+  drawShelfBoard(1090, 180, 340);
+  drawShelfBoard(1090, 320, 340);
+
+  // Shelf C1 Items (y=180)
+  drawShelfBottle(ctx, 1105, 152, 12, 28, 'rgba(231, 76, 60, 0.85)'); // red
+  drawShelfBottle(ctx, 1122, 156, 10, 24, 'rgba(52, 152, 219, 0.85)'); // blue
+  drawShelfBottle(ctx, 1137, 152, 14, 28, 'rgba(46, 204, 113, 0.85)'); // green
+  drawShelfMortar(ctx, 1165, 160);
+  drawShelfBook(ctx, 1205, 132, 12, 48, '#2C3E50');
+  drawShelfBook(ctx, 1220, 132, 14, 48, '#D35400', 0.15);
+  drawShelfBook(ctx, 1240, 132, 10, 48, '#7F8C8D');
+  drawShelfBottle(ctx, 1265, 152, 12, 28, 'rgba(155, 89, 182, 0.85)'); // purple
+  drawShelfCactus(ctx, 1300, 160);
+  drawShelfBottle(ctx, 1340, 152, 12, 28, 'rgba(241, 196, 15, 0.85)'); // yellow
+  drawShelfScrollStack(ctx, 1375, 160);
+
+  // Shelf C2 Items (y=320)
+  drawShelfScrollStack(ctx, 1105, 300);
+  drawShelfBottle(ctx, 1145, 292, 12, 28, 'rgba(231, 76, 60, 0.85)');
+  drawShelfBottle(ctx, 1162, 296, 10, 24, 'rgba(46, 204, 113, 0.85)');
+  // We draw the candle on C2 shelf: it's at X=1180, base Y=320. Candle Sprite handles drawing itself, but we use drawSprite:
+  drawSprite(ctx, candleSprite, candleColorMap, 1195, 320 - 88, 8); // Candle 1
+
+  drawShelfBook(ctx, 1230, 272, 12, 48, '#16A085'); // teal book
+  drawShelfBook(ctx, 1245, 272, 14, 48, '#E67E22'); // orange book
+  drawShelfBook(ctx, 1262, 272, 10, 48, '#8E44AD'); // purple book
+  drawShelfBook(ctx, 1275, 272, 12, 48, '#2C3E50'); // navy book
+  drawShelfMortar(ctx, 1305, 300);
+  drawShelfBottle(ctx, 1345, 292, 10, 28, 'rgba(52, 152, 219, 0.85)');
+  drawShelfCactus(ctx, 1380, 300);
+
+  // Draw Lanterns on the wall
+  drawSprite(ctx, lanternSprite, lanternColorMap, 180, 112, 8); // Lantern 1
+  drawSprite(ctx, lanternSprite, lanternColorMap, 1350, 62, 8); // Lantern 2
+
+  // Draw background sacks and crates at wall base (X=600 and X=1380)
+  // Sacks
+  const drawSack = (sx, sy) => {
+    ctx.fillStyle = '#1B130E';
+    ctx.fillRect(sx, sy, 32, 42);
+    ctx.fillStyle = '#C4B49A'; // Tan burlap
+    ctx.fillRect(sx + 2, sy + 2, 28, 38);
+    // Tie
+    ctx.fillStyle = '#8B5E3C';
+    ctx.fillRect(sx + 6, sy + 10, 20, 4);
+  };
+  drawSack(610, 460);
+  drawSack(630, 468);
   
-  // 2. Draw floor planks (Warm Honey Wood planks of height rowH)
-  const rowH = 86;
+  // Crates
+  const drawCrate = (cx, cy) => {
+    ctx.fillStyle = '#1B130E';
+    ctx.fillRect(cx, cy, 54, 52);
+    ctx.fillStyle = '#8B5E3C';
+    ctx.fillRect(cx + 2, cy + 2, 50, 48);
+    // Planks details
+    ctx.fillStyle = '#1B130E';
+    ctx.fillRect(cx + 2, cy + 16, 50, 3);
+    ctx.fillRect(cx + 2, cy + 32, 50, 3);
+    // Cross boards
+    ctx.strokeStyle = '#1B130E';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx + 2, cy + 2);
+    ctx.lineTo(cx + 52, cy + 50);
+    ctx.stroke();
+  };
+  drawCrate(1380, 450);
+
+  // 5. Draw floor planks (Cozy Dark Wood planks of height rowHeight)
   const floorStartY = 500;
   const floorEndY = CANVAS_HEIGHT;
-  
-  for (let y = floorStartY; y < floorEndY; y += rowH) {
-    const nextY = Math.min(y + rowH, floorEndY);
-    const currentH = nextY - y;
-    
-    ctx.fillStyle = '#C89A6A'; // Primary oak wood
-    ctx.fillRect(0, y, CANVAS_WIDTH, currentH);
-    
-    // Grain Highlights
-    ctx.fillStyle = '#EFE3D3';
-    ctx.fillRect(0, y, CANVAS_WIDTH, 3);
-    
-    // Crevice lines
-    ctx.fillStyle = '#4A2E1B';
-    ctx.fillRect(0, y + currentH - 3, CANVAS_WIDTH, 3);
+  const rowHeight = 86;
+  const plankRows = [
+    { y: floorStartY, joints: [500, 1300] },
+    { y: floorStartY + rowHeight, joints: [250, 1050, 1600] },
+    { y: floorStartY + rowHeight * 2, joints: [700, 1400] },
+    { y: floorStartY + rowHeight * 3, joints: [400, 1150] },
+    { y: floorStartY + rowHeight * 4, joints: [600, 1500] },
+    { y: floorStartY + rowHeight * 5, joints: [300, 1200] },
+    { y: floorStartY + rowHeight * 6, joints: [800] }
+  ];
+
+  plankRows.forEach((row, rowIndex) => {
+    const nextY = rowIndex === plankRows.length - 1 ? floorEndY : row.y + rowHeight;
+    const currentHeight = nextY - row.y;
+    if (currentHeight <= 0) return;
+
+    const joints = [0, ...row.joints, CANVAS_WIDTH];
+
+    for (let i = 0; i < joints.length - 1; i++) {
+      const startX = joints[i];
+      const endX = joints[i + 1];
+      const width = endX - startX;
+
+      const seed = Math.sin(startX * 0.03 + row.y * 0.07) * 10000;
+      const rand = seed - Math.floor(seed);
+
+      // Stagger colors for worn vintage wooden floor look
+      let plankColor = '#8B5E3C'; // Deeper walnut brown
+      if (rand < 0.15) {
+        plankColor = '#6E472D'; // Very dark oak
+      } else if (rand < 0.35) {
+        plankColor = '#9A6B3E'; // Medium warm brown
+      } else if (rand < 0.60) {
+        plankColor = '#B57F4F'; // Muted caramel
+      } else {
+        plankColor = '#8B5E3C'; // Deep walnut
+      }
+
+      ctx.fillStyle = plankColor;
+      ctx.fillRect(startX, row.y, width, currentHeight);
+
+      // Draw Wood Grains
+      ctx.save();
+      ctx.lineWidth = 1.5;
+      let grainColor = '#5c3d25';
+      if (plankColor === '#6E472D') grainColor = '#462d1d';
+      if (plankColor === '#9A6B3E') grainColor = '#6b4929';
+      if (plankColor === '#B57F4F') grainColor = '#8a5c34';
+      ctx.strokeStyle = grainColor;
+
+      const grainOffsets = [0.25, 0.5, 0.75];
+      grainOffsets.forEach((offset, gIdx) => {
+        const grainY = row.y + currentHeight * offset;
+        const startOffset = ((rand * (gIdx + 1) * 7.7) % 1) * (width * 0.4);
+        const grainWidth = (0.35 + ((rand * (gIdx + 1) * 3.3) % 0.45)) * width;
+
+        ctx.beginPath();
+        ctx.moveTo(startX + startOffset, grainY);
+        ctx.lineTo(startX + startOffset + grainWidth, grainY);
+        ctx.stroke();
+      });
+      ctx.restore();
+
+      // Top highlight line for 3D depth of planks
+      ctx.fillStyle = 'rgba(239, 227, 211, 0.15)';
+      ctx.fillRect(startX, row.y, width, 2);
+
+      // Bottom crevice shadow line
+      ctx.fillStyle = '#27190F';
+      ctx.fillRect(startX, row.y + currentHeight - 3, width, 3);
+    }
+  });
+
+  // Draw Vintage Rug under the Worktable (from X=770 to 1150, Y=635 to 780)
+  const rx = 770;
+  const ry = 635;
+  const rw = 380;
+  const rh = 145;
+
+  // Rug base outline shadow
+  ctx.fillStyle = 'rgba(15, 10, 8, 0.45)';
+  ctx.fillRect(rx - 4, ry - 4, rw + 8, rh + 8);
+
+  // Rug base fill (terracotta red)
+  ctx.fillStyle = '#7C3D32';
+  ctx.fillRect(rx, ry, rw, rh);
+
+  // Rug border (cream)
+  ctx.fillStyle = '#E5DEC9';
+  ctx.fillRect(rx + 8, ry + 8, rw - 16, 6);
+  ctx.fillRect(rx + 8, ry + rh - 14, rw - 16, 6);
+  ctx.fillRect(rx + 8, ry + 8, 6, rh - 16);
+  ctx.fillRect(rx + rw - 14, ry + 8, 6, rh - 16);
+
+  // Rug inner accent lines (navy blue)
+  ctx.fillStyle = '#2E4057';
+  ctx.fillRect(rx + 18, ry + 18, rw - 36, 4);
+  ctx.fillRect(rx + 18, ry + rh - 22, rw - 36, 4);
+  ctx.fillRect(rx + 18, ry + 18, 4, rh - 36);
+  ctx.fillRect(rx + rw - 22, ry + 18, 4, rh - 36);
+
+  // Fringes (left and right)
+  ctx.fillStyle = '#D5CBB5';
+  for (let y = ry + 4; y < ry + rh - 4; y += 4) {
+    ctx.fillRect(rx - 6, y, 6, 2);
+    ctx.fillRect(rx + rw, y, 6, 2);
   }
-  
+
+  // Soft junction shadow separating Wall and Floor (Y=500)
+  const junctionGrad = ctx.createLinearGradient(0, 500, 0, 515);
+  junctionGrad.addColorStop(0, 'rgba(27, 19, 14, 0.6)');
+  junctionGrad.addColorStop(1, 'rgba(27, 19, 14, 0)');
+  ctx.fillStyle = junctionGrad;
+  ctx.fillRect(0, 500, CANVAS_WIDTH, 15);
+
   // Doorway to the shop (on the far left edge)
   ctx.fillStyle = '#171210';
   ctx.fillRect(0, 320, 24, 180);
@@ -2504,6 +3063,9 @@ function drawWorkroomEntities() {
     {
       y: 486,
       draw: () => {
+        // Draw Stove grounding shadow
+        ctx.fillStyle = 'rgba(27, 19, 14, 0.45)';
+        ctx.fillRect(300, 480, 120, 10);
         // Draw Stove (Y=310, bottom Y=486)
         drawSprite(ctx, stoveSprite, stoveColorMap, 300, 310, pixelScale);
       }
@@ -2511,6 +3073,11 @@ function drawWorkroomEntities() {
     {
       y: 543,
       draw: () => {
+        // Draw Barrel grounding shadow
+        ctx.fillStyle = 'rgba(27, 19, 14, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(750, 538, 72, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
         // Draw Barrel (Y=383, bottom Y=543, size: 160x160)
         if (barrelImage.complete) {
           ctx.drawImage(barrelImage, 670, 383, 160, 160);
@@ -2523,6 +3090,9 @@ function drawWorkroomEntities() {
     {
       y: 543,
       draw: () => {
+        // Draw Main Cabinet grounding shadow
+        ctx.fillStyle = 'rgba(27, 19, 14, 0.45)';
+        ctx.fillRect(850, 532, 220, 14);
         // Draw Main Cabinet (Y=53, bottom Y=543, aspect-ratio preserved size: 220x490)
         if (cabinetIngredientsImage.complete) {
           ctx.drawImage(cabinetIngredientsImage, 850, 53, 220, 490);
@@ -2534,6 +3104,9 @@ function drawWorkroomEntities() {
     {
       y: 486,
       draw: () => {
+        // Draw Second Cabinet grounding shadow
+        ctx.fillStyle = 'rgba(27, 19, 14, 0.45)';
+        ctx.fillRect(1460, 480, 120, 10);
         // Draw Second Cabinet (Y=310, bottom Y=486)
         drawSprite(ctx, secondCabinetSprite, secondCabinetColorMap, 1460, 310, pixelScale);
       }
@@ -2541,6 +3114,11 @@ function drawWorkroomEntities() {
     {
       y: 486,
       draw: () => {
+        // Draw Potted Plant grounding shadow
+        ctx.fillStyle = 'rgba(27, 19, 14, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(1650, 482, 48, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
         // Draw Potted Plant beside Second Cabinet (bottom Y=486, size 120x156)
         if (pottedPlantImage.complete) {
           ctx.drawImage(pottedPlantImage, 1590, 330, 120, 156);
@@ -2550,6 +3128,11 @@ function drawWorkroomEntities() {
     {
       y: 738,
       draw: () => {
+        // Draw Worktable grounding shadow
+        ctx.fillStyle = 'rgba(27, 19, 14, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(958, 732, 120, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
         // Draw Worktable (Y=610, bottom Y=738)
         drawSprite(ctx, worktableSprite, worktableColorMap, 830, 610, pixelScale);
       }
@@ -2558,7 +3141,7 @@ function drawWorkroomEntities() {
       y: player.y + player.renderHeight,
       draw: () => {
         // Draw Player Shadow
-        ctx.fillStyle = 'rgba(74, 59, 50, 0.45)';
+        ctx.fillStyle = 'rgba(27, 19, 14, 0.45)';
         ctx.beginPath();
         ctx.ellipse(player.x + player.renderWidth/2, player.y + player.renderHeight, player.renderWidth/2, 10, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -2585,23 +3168,47 @@ function drawSteamParticles() {
 
 function drawWorkroomGlows() {
   const t = Date.now() / 1000;
+  
+  // 1. Draw glowing lights (screen mode)
   ctx.globalCompositeOperation = 'screen';
   
-  // Warm furnace glow from Stove (stove is at x = 300)
-  const flicker = 0.95 + 0.05 * Math.sin(t * 3.5);
-  const radius = 120 * flicker;
-  const sX = 360;
-  const sY = 430;
+  // Define workroom glowing lights:
+  const glows = [
+    { x: 216, y: 200, r: 100, color: 'rgba(244, 192, 94, 0.45)' },   // Lantern 1
+    { x: 1386, y: 150, r: 100, color: 'rgba(244, 192, 94, 0.45)' },  // Lantern 2
+    { x: 1223, y: 270, r: 55, color: 'rgba(244, 192, 94, 0.45)' },   // Candle 1 on Shelf C2
+    { x: 1538, y: 250, r: 55, color: 'rgba(244, 192, 94, 0.45)' },   // Candle 2 on Cabinet
+    { x: 360, y: 430, r: 160, color: 'rgba(220, 70, 50, 0.45)' }     // Stove furnace red/orange glow
+  ];
   
-  const grad = ctx.createRadialGradient(sX, sY, 0, sX, sY, radius);
-  grad.addColorStop(0, 'rgba(212, 63, 94, 0.4)');
-  grad.addColorStop(0.4, 'rgba(244, 192, 94, 0.2)');
-  grad.addColorStop(1, 'rgba(244, 192, 94, 0)');
+  glows.forEach((src, idx) => {
+    const t_i = t + idx * 1.3;
+    const flicker = 0.94 + 0.06 * Math.sin(t_i * 3.1) + 0.02 * Math.cos(t_i * 8.2);
+    const radius = src.r * flicker;
+    
+    const grad = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, radius);
+    grad.addColorStop(0, src.color);
+    grad.addColorStop(0.35, src.color.replace(/[\d\.]+\)$/, '0.15)'));
+    grad.addColorStop(1, 'rgba(244, 192, 94, 0)');
+    
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(src.x, src.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  });
   
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.arc(sX, sY, radius, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+  
+  // 2. Cinematic Vignette (multiply mode to darken borders in a warm sepia tone)
+  ctx.globalCompositeOperation = 'multiply';
+  const vignetteGrad = ctx.createRadialGradient(
+    CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, CANVAS_WIDTH / 3,
+    CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, CANVAS_WIDTH / 1.15
+  );
+  vignetteGrad.addColorStop(0, '#ffffff'); // Center unchanged
+  vignetteGrad.addColorStop(1, '#A09085'); // Edges darkened warmly
+  ctx.fillStyle = vignetteGrad;
+  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   
   ctx.globalCompositeOperation = 'source-over';
 }
