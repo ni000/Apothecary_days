@@ -2824,23 +2824,23 @@ function drawWorktableView() {
   
   // 2. Positions and proportions for Mortar & Pestle and Copper Basin (images are 693x360)
   const mortarCenterX = 680;
-  const mortarCenterY = 500;
-  const mortarH = 340;
-  const mortarW = mortarH * (693 / 360); // 654.5
+  const mortarCenterY = 480;
+  const mortarH = 280;
+  const mortarW = mortarH * (693 / 360); // 539
   
   const bowlCenterX = 1240;
-  const bowlCenterY = 500;
-  const bowlH = 340;
-  const bowlW = bowlH * (693 / 360); // 654.5
+  const bowlCenterY = 480;
+  const bowlH = 280;
+  const bowlW = bowlH * (693 / 360); // 539
   
   // Grounding soft shadows under props
   ctx.fillStyle = 'rgba(27, 19, 14, 0.45)';
   ctx.beginPath();
-  ctx.ellipse(mortarCenterX, mortarCenterY + 130, 115, 22, 0, 0, Math.PI * 2);
+  ctx.ellipse(mortarCenterX, mortarCenterY + 110, 95, 18, 0, 0, Math.PI * 2);
   ctx.fill();
   
   ctx.beginPath();
-  ctx.ellipse(bowlCenterX, bowlCenterY + 115, 135, 22, 0, 0, Math.PI * 2);
+  ctx.ellipse(bowlCenterX, bowlCenterY + 110, 110, 20, 0, 0, Math.PI * 2);
   ctx.fill();
   
   // Draw Solid Mortar & Pestle
@@ -2883,19 +2883,19 @@ function drawWorktableView() {
   ctx.fillStyle = '#F5F2EB';
   ctx.strokeStyle = '#1d1511';
   ctx.lineWidth = 3;
-  ctx.fillRect(mortarCenterX - mLabelW/2, mortarCenterY - 175, mLabelW, 36);
-  ctx.strokeRect(mortarCenterX - mLabelW/2, mortarCenterY - 175, mLabelW, 36);
+  ctx.fillRect(mortarCenterX - mLabelW/2, mortarCenterY - 145, mLabelW, 36);
+  ctx.strokeRect(mortarCenterX - mLabelW/2, mortarCenterY - 145, mLabelW, 36);
   ctx.fillStyle = '#4A3B32';
-  ctx.fillText(mortarStatusText, mortarCenterX, mortarCenterY - 157);
+  ctx.fillText(mortarStatusText, mortarCenterX, mortarCenterY - 127);
   
   // Copper Basin status card
   let bowlStatusText = copperBowlState === 'FULL' ? "Full of Mixture (Tap / Press E to Collect)" : "Copper Basin (Empty - Drop mixture here)";
   const bLabelW = ctx.measureText(bowlStatusText).width + 28;
   ctx.fillStyle = '#F5F2EB';
-  ctx.fillRect(bowlCenterX - bLabelW/2, bowlCenterY - 160, bLabelW, 36);
-  ctx.strokeRect(bowlCenterX - bLabelW/2, bowlCenterY - 160, bLabelW, 36);
+  ctx.fillRect(bowlCenterX - bLabelW/2, bowlCenterY - 145, bLabelW, 36);
+  ctx.strokeRect(bowlCenterX - bLabelW/2, bowlCenterY - 145, bLabelW, 36);
   ctx.fillStyle = '#4A3B32';
-  ctx.fillText(bowlStatusText, bowlCenterX, bowlCenterY - 142);
+  ctx.fillText(bowlStatusText, bowlCenterX, bowlCenterY - 127);
   
   ctx.restore();
   
@@ -2904,13 +2904,13 @@ function drawWorktableView() {
     const progress = mortarMixingTime / 5.0;
     
     ctx.beginPath();
-    ctx.arc(mortarCenterX, mortarCenterY, 80, 0, Math.PI * 2);
+    ctx.arc(mortarCenterX, mortarCenterY, 70, 0, Math.PI * 2);
     ctx.strokeStyle = 'rgba(29, 21, 17, 0.5)';
     ctx.lineWidth = 10;
     ctx.stroke();
     
     ctx.beginPath();
-    ctx.arc(mortarCenterX, mortarCenterY, 80, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+    ctx.arc(mortarCenterX, mortarCenterY, 70, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
     ctx.strokeStyle = '#F4C05E'; // glowing gold Progress Arc
     ctx.lineWidth = 10;
     ctx.stroke();
@@ -4017,8 +4017,8 @@ function renderBookPage() {
 
   // State 2 -> State 3 Transition on correct page opened
   if (currentCustomerState === CustomerState.LOOKUP && activeRecipePage === targetPage) {
-    acquireRecipe(targetPage);
     currentCustomerState = CustomerState.INGREDIENTS;
+    acquireRecipe(targetPage);
     updateObjective();
     checkIngredientsCollected();
   }
