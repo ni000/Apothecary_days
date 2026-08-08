@@ -5,7 +5,7 @@ const PLAYER_SPEED = 400; // pixels per second
 const NPC_SPEED = 150;
 
 // Game State Enum
-const GameState = { MENU: 'MENU', TRANSITION: 'TRANSITION', GAMEPLAY: 'GAMEPLAY', DIALOGUE: 'DIALOGUE', CABINET: 'CABINET', BOOK: 'BOOK' };
+const GameState = { MENU: 'MENU', TRANSITION: 'TRANSITION', GAMEPLAY: 'GAMEPLAY', DIALOGUE: 'DIALOGUE', CABINET: 'CABINET', BOOK: 'BOOK', WORKTABLE: 'WORKTABLE' };
 let currentState = GameState.MENU;
 
 // DOM Elements
@@ -34,6 +34,10 @@ function handleKeyDown(e) {
   }
   if (e.key === 'Escape' && currentState === GameState.BOOK) {
     closeBookView();
+    closeManuscriptView();
+  }
+  if (e.key === 'Escape' && currentState === GameState.WORKTABLE) {
+    exitWorktableView();
   }
 
   let key = e.key.toLowerCase();
@@ -108,7 +112,7 @@ canvas.addEventListener('mousedown', (e) => {
   mouseCanvasY = pos.y;
   isMouseDown = true;
 
-  if (currentState === GameState.GAMEPLAY || currentState === GameState.CABINET) {
+  if (currentState === GameState.GAMEPLAY || currentState === GameState.CABINET || currentState === GameState.WORKTABLE) {
     if (mouseCanvasY >= 920 && mouseCanvasY <= 1040) {
       for (let i = 0; i < 10; i++) {
         const slotX = 488 + i * (slotSize + slotSpacing);
@@ -124,7 +128,55 @@ canvas.addEventListener('mousedown', (e) => {
     }
   }
   
-  if (currentState === GameState.CABINET) {
+  if (currentState === GameState.WORKTABLE) {
+    // Check Close Button: bounding box x [1740, 1860], y [50, 110]
+    if (mouseCanvasX >= 1740 && mouseCanvasX <= 1860 && mouseCanvasY >= 50 && mouseCanvasY <= 110) {
+      exitWorktableView();
+      return;
+    }
+    
+    // Mortar & Pestle bounding box: X [530, 830], Y [360, 660]
+    if (mouseCanvasX >= 530 && mouseCanvasX <= 830 && mouseCanvasY >= 360 && mouseCanvasY <= 660) {
+      if (mortarState === 'FULL') {
+        mortarState = 'MIXING';
+        mortarMixingTime = 0;
+        return;
+      }
+      if (mortarState === 'MIXED') {
+        isDraggingFromMortar = true;
+        draggedItemX = mouseCanvasX;
+        draggedItemY = mouseCanvasY;
+        return;
+      }
+    }
+    
+    // Copper Bowl bounding box: X [1070, 1410], Y [370, 630]
+    if (mouseCanvasX >= 1070 && mouseCanvasX <= 1410 && mouseCanvasY >= 370 && mouseCanvasY <= 630) {
+      if (copperBowlState === 'FULL') {
+        if (inventory.length < 10) {
+          inventory.push("Willow Bark Mixture");
+          copperBowlState = 'EMPTY';
+          
+          const slotIndex = inventory.length - 1;
+          const slotX = 488 + slotIndex * (slotSize + slotSpacing);
+          const slotY = 940;
+          activeAnimations.push({
+            type: 'collect_slide',
+            itemName: 'Willow Bark Mixture',
+            startX: 1240,
+            startY: 500,
+            x: 1240,
+            y: 500,
+            endX: slotX + slotSize/2,
+            endY: slotY + slotSize/2,
+            progress: 0,
+            duration: 0.6
+          });
+        }
+        return;
+      }
+    }
+  } else if (currentState === GameState.CABINET) {
     // Check Close Button: bounding box x [1740, 1860], y [50, 110]
     if (mouseCanvasX >= 1740 && mouseCanvasX <= 1860 && mouseCanvasY >= 50 && mouseCanvasY <= 110) {
       exitCabinetView();
@@ -144,9 +196,9 @@ canvas.addEventListener('mousedown', (e) => {
     // Check tap on Stove (x: [300, 420], y: [410, 476])
     if (mouseCanvasX >= 300 && mouseCanvasX <= 420 && mouseCanvasY >= 410 && mouseCanvasY <= 476) {
       const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 360, 2) + Math.pow((player.y + player.renderHeight/2) - 443, 2));
-      const hasIngredients = inventory.includes("Willow Bark") && inventory.includes("Water");
+      const hasMixture = inventory.includes("Willow Bark Mixture");
       const hasBottle = inventory.some(name => bottles.some(b => b.name === name));
-      if (dist < 250 && (currentCustomerState === CustomerState.STEPS || currentCustomerState === CustomerState.CRAFTING) && hasIngredients && hasBottle && !inventory.includes("Willow Bark Decoction")) {
+      if (dist < 250 && (currentCustomerState === CustomerState.STEPS || currentCustomerState === CustomerState.CRAFTING) && hasMixture && hasBottle && !inventory.includes("Willow Bark Decoction")) {
         activeHoldStove = true;
         isBrewing = true;
         brewingTime = 0;
@@ -174,6 +226,15 @@ canvas.addEventListener('mousedown', (e) => {
       if (dist < 250) {
         activeCabinet = 'BOTTLE';
         openCabinetView();
+      }
+    }
+  } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.WORKROOM) {
+    // Check tap on Worktable (x: [830, 1090], y: [700, 840])
+    if (mouseCanvasX >= 830 && mouseCanvasX <= 1090 && mouseCanvasY >= 700 && mouseCanvasY <= 840) {
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 960, 2) + Math.pow((player.y + player.renderHeight) - 770, 2));
+      if (dist < 250) {
+        openWorktableView();
+        return;
       }
     }
   } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.SHOP) {
@@ -224,7 +285,7 @@ canvas.addEventListener('touchstart', (e) => {
   mouseCanvasY = pos.y;
   isMouseDown = true;
 
-  if (currentState === GameState.GAMEPLAY || currentState === GameState.CABINET) {
+  if (currentState === GameState.GAMEPLAY || currentState === GameState.CABINET || currentState === GameState.WORKTABLE) {
     if (mouseCanvasY >= 920 && mouseCanvasY <= 1040) {
       for (let i = 0; i < 10; i++) {
         const slotX = 488 + i * (slotSize + slotSpacing);
@@ -240,7 +301,53 @@ canvas.addEventListener('touchstart', (e) => {
     }
   }
   
-  if (currentState === GameState.CABINET) {
+  if (currentState === GameState.WORKTABLE) {
+    // Check Close Button
+    if (mouseCanvasX >= 1740 && mouseCanvasX <= 1860 && mouseCanvasY >= 50 && mouseCanvasY <= 110) {
+      exitWorktableView();
+      return;
+    }
+    // Mortar & Pestle
+    if (mouseCanvasX >= 530 && mouseCanvasX <= 830 && mouseCanvasY >= 360 && mouseCanvasY <= 660) {
+      if (mortarState === 'FULL') {
+        mortarState = 'MIXING';
+        mortarMixingTime = 0;
+        return;
+      }
+      if (mortarState === 'MIXED') {
+        isDraggingFromMortar = true;
+        draggedItemX = mouseCanvasX;
+        draggedItemY = mouseCanvasY;
+        return;
+      }
+    }
+    // Copper Bowl
+    if (mouseCanvasX >= 1070 && mouseCanvasX <= 1410 && mouseCanvasY >= 370 && mouseCanvasY <= 630) {
+      if (copperBowlState === 'FULL') {
+        if (inventory.length < 10) {
+          inventory.push("Willow Bark Mixture");
+          copperBowlState = 'EMPTY';
+          
+          const slotIndex = inventory.length - 1;
+          const slotX = 488 + slotIndex * (slotSize + slotSpacing);
+          const slotY = 940;
+          activeAnimations.push({
+            type: 'collect_slide',
+            itemName: 'Willow Bark Mixture',
+            startX: 1240,
+            startY: 500,
+            x: 1240,
+            y: 500,
+            endX: slotX + slotSize/2,
+            endY: slotY + slotSize/2,
+            progress: 0,
+            duration: 0.6
+          });
+        }
+        return;
+      }
+    }
+  } else if (currentState === GameState.CABINET) {
     // Check Close Button
     if (mouseCanvasX >= 1740 && mouseCanvasX <= 1860 && mouseCanvasY >= 50 && mouseCanvasY <= 110) {
       exitCabinetView();
@@ -260,9 +367,9 @@ canvas.addEventListener('touchstart', (e) => {
     // Check tap on Stove (x: [300, 420], y: [410, 476])
     if (mouseCanvasX >= 300 && mouseCanvasX <= 420 && mouseCanvasY >= 410 && mouseCanvasY <= 476) {
       const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 360, 2) + Math.pow((player.y + player.renderHeight/2) - 443, 2));
-      const hasIngredients = inventory.includes("Willow Bark") && inventory.includes("Water");
+      const hasMixture = inventory.includes("Willow Bark Mixture");
       const hasBottle = inventory.some(name => bottles.some(b => b.name === name));
-      if (dist < 250 && (currentCustomerState === CustomerState.STEPS || currentCustomerState === CustomerState.CRAFTING) && hasIngredients && hasBottle && !inventory.includes("Willow Bark Decoction")) {
+      if (dist < 250 && (currentCustomerState === CustomerState.STEPS || currentCustomerState === CustomerState.CRAFTING) && hasMixture && hasBottle && !inventory.includes("Willow Bark Decoction")) {
         activeHoldStove = true;
         isBrewing = true;
         brewingTime = 0;
@@ -290,6 +397,14 @@ canvas.addEventListener('touchstart', (e) => {
       if (dist < 250) {
         activeCabinet = 'BOTTLE';
         openCabinetView();
+      }
+    }
+  } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.WORKROOM) {
+    if (mouseCanvasX >= 830 && mouseCanvasX <= 1090 && mouseCanvasY >= 700 && mouseCanvasY <= 840) {
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 960, 2) + Math.pow((player.y + player.renderHeight) - 770, 2));
+      if (dist < 250) {
+        openWorktableView();
+        return;
       }
     }
   } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.SHOP) {
@@ -337,12 +452,39 @@ canvas.addEventListener('touchstart', (e) => {
 canvas.addEventListener('mouseup', () => {
   isMouseDown = false;
   if (draggedItemIndex !== null) {
-    if (mouseCanvasX < 468 || mouseCanvasX > 1452 || mouseCanvasY < 920 || mouseCanvasY > 1040) {
-      inventory.splice(draggedItemIndex, 1);
-      checkIngredientsCollected();
+    if (currentState === GameState.WORKTABLE) {
+      // Check if dropped onto Mortar & Pestle
+      if (mouseCanvasX >= 520 && mouseCanvasX <= 840 && mouseCanvasY >= 350 && mouseCanvasY <= 670) {
+        const itemName = inventory[draggedItemIndex];
+        if ((itemName === "Willow Bark" || itemName === "Water") && !mortarIngredients.includes(itemName) && (mortarState === 'EMPTY' || mortarState === 'HALF')) {
+          mortarIngredients.push(itemName);
+          inventory.splice(draggedItemIndex, 1);
+          if (mortarIngredients.length === 1) mortarState = 'HALF';
+          else if (mortarIngredients.length >= 2) mortarState = 'FULL';
+        }
+      } else if (mouseCanvasX < 468 || mouseCanvasX > 1452 || mouseCanvasY < 920 || mouseCanvasY > 1040) {
+        inventory.splice(draggedItemIndex, 1);
+        checkIngredientsCollected();
+      }
+    } else {
+      if (mouseCanvasX < 468 || mouseCanvasX > 1452 || mouseCanvasY < 920 || mouseCanvasY > 1040) {
+        inventory.splice(draggedItemIndex, 1);
+        checkIngredientsCollected();
+      }
     }
     draggedItemIndex = null;
   }
+  
+  if (isDraggingFromMortar) {
+    // Check if dropped onto Copper Bowl
+    if (mouseCanvasX >= 1050 && mouseCanvasX <= 1430 && mouseCanvasY >= 350 && mouseCanvasY <= 650) {
+      mortarState = 'EMPTY';
+      mortarIngredients = [];
+      copperBowlState = 'FULL';
+    }
+    isDraggingFromMortar = false;
+  }
+  
   if (activeHoldJarIndex !== null && !keys.e) {
     activeHoldJarIndex = null;
     holdTime = 0;
@@ -361,12 +503,39 @@ canvas.addEventListener('mouseup', () => {
 canvas.addEventListener('touchend', () => {
   isMouseDown = false;
   if (draggedItemIndex !== null) {
-    if (mouseCanvasX < 468 || mouseCanvasX > 1452 || mouseCanvasY < 920 || mouseCanvasY > 1040) {
-      inventory.splice(draggedItemIndex, 1);
-      checkIngredientsCollected();
+    if (currentState === GameState.WORKTABLE) {
+      // Check if dropped onto Mortar & Pestle
+      if (mouseCanvasX >= 520 && mouseCanvasX <= 840 && mouseCanvasY >= 350 && mouseCanvasY <= 670) {
+        const itemName = inventory[draggedItemIndex];
+        if ((itemName === "Willow Bark" || itemName === "Water") && !mortarIngredients.includes(itemName) && (mortarState === 'EMPTY' || mortarState === 'HALF')) {
+          mortarIngredients.push(itemName);
+          inventory.splice(draggedItemIndex, 1);
+          if (mortarIngredients.length === 1) mortarState = 'HALF';
+          else if (mortarIngredients.length >= 2) mortarState = 'FULL';
+        }
+      } else if (mouseCanvasX < 468 || mouseCanvasX > 1452 || mouseCanvasY < 920 || mouseCanvasY > 1040) {
+        inventory.splice(draggedItemIndex, 1);
+        checkIngredientsCollected();
+      }
+    } else {
+      if (mouseCanvasX < 468 || mouseCanvasX > 1452 || mouseCanvasY < 920 || mouseCanvasY > 1040) {
+        inventory.splice(draggedItemIndex, 1);
+        checkIngredientsCollected();
+      }
     }
     draggedItemIndex = null;
   }
+  
+  if (isDraggingFromMortar) {
+    // Check if dropped onto Copper Bowl
+    if (mouseCanvasX >= 1050 && mouseCanvasX <= 1430 && mouseCanvasY >= 350 && mouseCanvasY <= 650) {
+      mortarState = 'EMPTY';
+      mortarIngredients = [];
+      copperBowlState = 'FULL';
+    }
+    isDraggingFromMortar = false;
+  }
+  
   if (activeHoldJarIndex !== null && !keys.e) {
     activeHoldJarIndex = null;
     holdTime = 0;
@@ -896,7 +1065,7 @@ function checkCollision(x, y, width, height) {
       { x: 850, y: 470, w: 220, h: 73 },   // Main Cabinet
       { x: 1460, y: 410, w: 120, h: 60 },  // Second Cabinet
       { x: 1590, y: 440, w: 120, h: 30 },  // Potted Plant
-      { x: 830, y: 620, w: 260, h: 128 }   // Worktable
+      { x: 830, y: 720, w: 260, h: 128 }   // Worktable (shifted down 100px)
     ];
     
     for (const obs of obstacles) {
@@ -1115,6 +1284,8 @@ playerUpImg.src = 'apothecary_up.png';
 
 let playerDirection = 'down'; // Track current player direction
 
+const bookImage = new Image();
+bookImage.src = 'book.png';
 
 // Load custom flask images
 const flaskImages = {
@@ -1145,6 +1316,47 @@ potLeafyImage.src = 'pot_leafy.png';
 // Load custom vine image
 const vineImage = new Image();
 vineImage.src = 'vine.png';
+
+// Load custom worktable close-up image
+const tableCloseupImage = new Image();
+tableCloseupImage.src = 'table_closeup.png';
+
+// Load custom mortar & pestle images
+const mortarEmptyImage = new Image();
+mortarEmptyImage.src = 'mortar_empty.png';
+
+const mortarHalfImage = new Image();
+mortarHalfImage.src = 'mortar_half.png';
+
+const mortarFull1Image = new Image();
+mortarFull1Image.src = 'mortar_full_1.png';
+
+const mortarFull2Image = new Image();
+mortarFull2Image.src = 'mortar_full_2.png';
+
+// Load custom copper bowl images
+const copperBowlEmptyImage = new Image();
+copperBowlEmptyImage.src = 'copper_bowl_empty.png';
+
+const copperBowlFullImage = new Image();
+copperBowlFullImage.src = 'copper_bowl_full.png';
+
+// Worktable Crafting State Variables
+let mortarIngredients = [];
+let mortarState = 'EMPTY'; // 'EMPTY', 'HALF', 'FULL', 'MIXING', 'MIXED'
+let mortarMixingTime = 0;
+let copperBowlState = 'EMPTY'; // 'EMPTY', 'FULL'
+let isDraggingFromMortar = false;
+
+function openWorktableView() {
+  currentState = GameState.WORKTABLE;
+  interactionPrompt.classList.add('hidden');
+}
+
+function exitWorktableView() {
+  currentState = GameState.GAMEPLAY;
+  isDraggingFromMortar = false;
+}
 
 // Generate randomized and equally distributed flask array (13 slots total)
 const flaskTypes = ['pink', 'blue', 'red', 'green', 'pink', 'blue', 'red', 'green', 'pink', 'blue', 'red', 'green', 'red'];
@@ -1482,7 +1694,7 @@ function update(dt) {
       
       const bookCenterX = 998;
       const bookCenterY = 496;
-      const distToBook = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - bookCenterX, 2) + Math.pow((player.y + player.renderHeight/2) - bookCenterY, 2));
+      const isNearBook = Math.abs((player.x + player.renderWidth/2) - bookCenterX) < 100 && (player.y >= 320);
       
       let showNPCPrompt = false;
       if (npc.reachedCounter) {
@@ -1523,7 +1735,8 @@ function update(dt) {
             startDialogue();
           }
         }
-      } else if (distToBook < 180) {
+      }
+      else if (isNearBook) {
         interactionPrompt.classList.remove('hidden');
         if (currentCustomerState === CustomerState.IDLE) {
           interactionPrompt.textContent = "Press E / Tap to Open Shop";
@@ -1562,8 +1775,8 @@ function update(dt) {
       const barrelCenterX = 750;
       const barrelCenterY = 463;
       
-      const distToMain = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - mainCenterX, 2) + Math.pow((player.y + player.renderHeight/2) - mainCenterY, 2));
-      const distToBottle = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - bottleCenterX, 2) + Math.pow((player.y + player.renderHeight/2) - bottleCenterY, 2));
+      const isNearMain = Math.abs((player.x + player.renderWidth/2) - mainCenterX) < 150 && Math.abs((player.y + player.renderHeight) - 543) < 80;
+      const isNearBottle = Math.abs((player.x + player.renderWidth/2) - bottleCenterX) < 130 && Math.abs((player.y + player.renderHeight) - 486) < 80;
       const distToBarrel = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - barrelCenterX, 2) + Math.pow((player.y + player.renderHeight/2) - barrelCenterY, 2));
       
       let targetCabinet = null;
@@ -1571,21 +1784,26 @@ function update(dt) {
       let isBarrelTarget = false;
       
       if (distToBarrel < 180 && !inventory.includes('Water')) {
-        if (distToMain >= distToBarrel) {
+        if (!isNearMain) {
           isBarrelTarget = true;
           targetX = barrelCenterX;
         } else {
           targetCabinet = 'INGREDIENT';
           targetX = mainCenterX;
         }
-      } else if (distToMain < 180) {
+      } else if (isNearMain) {
         targetCabinet = 'INGREDIENT';
         targetX = mainCenterX;
-      } else if (distToBottle < 180) {
+      } else if (isNearBottle) {
         targetCabinet = 'BOTTLE';
         targetX = bottleCenterX;
       }
       
+      // Worktable proximity & interaction
+      const tableCenterX = 960;
+      const tableCenterY = 770;
+      const distToTable = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - tableCenterX, 2) + Math.pow((player.y + player.renderHeight) - tableCenterY, 2));
+
       if (isBarrelTarget) {
         interactionPrompt.classList.remove('hidden');
         interactionPrompt.textContent = "Hold E / Tap to Collect Water";
@@ -1608,6 +1826,19 @@ function update(dt) {
         if (keysPressed.e) {
           activeCabinet = targetCabinet;
           openCabinetView();
+        }
+      } else if (distToTable < 200) {
+        interactionPrompt.classList.remove('hidden');
+        interactionPrompt.textContent = "Press E / Tap to Use Worktable";
+        
+        const containerRect = document.getElementById('game-container').getBoundingClientRect();
+        const scaleX = containerRect.width / CANVAS_WIDTH;
+        const scaleY = containerRect.height / CANVAS_HEIGHT;
+        interactionPrompt.style.left = `${tableCenterX * scaleX}px`;
+        interactionPrompt.style.top = `${660 * scaleY}px`;
+        
+        if (keysPressed.e) {
+          openWorktableView();
         }
       } else {
         interactionPrompt.classList.add('hidden');
@@ -1661,9 +1892,32 @@ function update(dt) {
       const stoveCenterY = 443;
       const distToStove = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - stoveCenterX, 2) + Math.pow((player.y + player.renderHeight/2) - stoveCenterY, 2));
       
-      const hasIngredients = inventory.includes("Willow Bark") && inventory.includes("Water");
-      const hasBottle = inventory.some(name => bottles.some(b => b.name === name));
-      const canBrew = (currentCustomerState === CustomerState.STEPS || currentCustomerState === CustomerState.CRAFTING) && hasIngredients && hasBottle && !inventory.includes("Willow Bark Decoction");
+      // For Willow Bark Decoction, strictly require "Willow Bark Mixture" + empty bottle (old shortcut removed!)
+      const targetPage = ailmentToRecipePage[activeAilmentType] || 1;
+      let hasRequiredForStove = false;
+      let missingMessage = "";
+      
+      if (targetPage === 1) {
+        const hasMixture = inventory.includes("Willow Bark Mixture");
+        const hasBottle = inventory.some(name => bottles.some(b => b.name === name));
+        hasRequiredForStove = hasMixture && hasBottle;
+        if (!hasMixture) missingMessage = "Need Willow Bark Mixture (grind on worktable)";
+        else if (!hasBottle) missingMessage = "Need an empty bottle";
+      } else if (targetPage === 2) {
+        const hasIngredients = inventory.includes("Beeswax") && inventory.includes("Fats") && inventory.includes("Herbal Extract");
+        const hasBottle = inventory.some(name => bottles.some(b => b.name === name));
+        hasRequiredForStove = hasIngredients && hasBottle;
+        if (!hasIngredients) missingMessage = "Missing ingredients (Beeswax, Fats, Herbal Extract)";
+        else if (!hasBottle) missingMessage = "Need an empty bottle";
+      } else if (targetPage === 3) {
+        const hasIngredients = inventory.includes("Tulsi") && inventory.includes("Ginger") && inventory.includes("Black Pepper") && inventory.includes("Jaggery") && inventory.includes("Honey");
+        const hasBottle = inventory.some(name => bottles.some(b => b.name === name));
+        hasRequiredForStove = hasIngredients && hasBottle;
+        if (!hasIngredients) missingMessage = "Missing ingredients";
+        else if (!hasBottle) missingMessage = "Need an empty bottle";
+      }
+      
+      const canBrew = (currentCustomerState === CustomerState.STEPS || currentCustomerState === CustomerState.CRAFTING) && hasRequiredForStove && !inventory.includes("Willow Bark Decoction");
       
       if (distToStove < 180 && canBrew) {
         interactionPrompt.classList.remove('hidden');
@@ -1683,11 +1937,11 @@ function update(dt) {
           if (brewingTime >= 1.5) {
             const emptyBottleName = inventory.find(name => bottles.some(b => b.name === name));
             
-            // Consume ingredients
-            const willowIndex = inventory.indexOf("Willow Bark");
-            if (willowIndex > -1) inventory.splice(willowIndex, 1);
-            const waterIndex = inventory.indexOf("Water");
-            if (waterIndex > -1) inventory.splice(waterIndex, 1);
+            // Consume mixture or ingredients
+            if (targetPage === 1) {
+              const mixtureIndex = inventory.indexOf("Willow Bark Mixture");
+              if (mixtureIndex > -1) inventory.splice(mixtureIndex, 1);
+            }
             const bottleIndex = inventory.indexOf(emptyBottleName);
             if (bottleIndex > -1) inventory.splice(bottleIndex, 1);
             
@@ -1728,9 +1982,9 @@ function update(dt) {
           isBrewing = false;
           brewingTime = 0;
         }
-      } else if (distToStove < 180 && (currentCustomerState === CustomerState.STEPS || currentCustomerState === CustomerState.CRAFTING) && (!hasIngredients || !hasBottle)) {
+      } else if (distToStove < 180 && (currentCustomerState === CustomerState.STEPS || currentCustomerState === CustomerState.CRAFTING) && !hasRequiredForStove) {
         interactionPrompt.classList.remove('hidden');
-        interactionPrompt.textContent = !hasIngredients ? "Missing ingredients (Willow Bark, Water)" : "Need an empty bottle";
+        interactionPrompt.textContent = missingMessage;
         const containerRect = document.getElementById('game-container').getBoundingClientRect();
         const scaleX = containerRect.width / CANVAS_WIDTH;
         const scaleY = containerRect.height / CANVAS_HEIGHT;
@@ -1761,6 +2015,43 @@ function update(dt) {
         p.alpha = 0.5 * (1 - p.life / p.maxLife);
         if (p.life >= p.maxLife) {
           steamParticles.splice(i, 1);
+        }
+      }
+    }
+  } else if (currentState === GameState.WORKTABLE) {
+    interactionPrompt.classList.add('hidden');
+    
+    // Mixing progression
+    if (mortarState === 'MIXING') {
+      mortarMixingTime += dt;
+      if (mortarMixingTime >= 5.0) {
+        mortarState = 'MIXED';
+        mortarMixingTime = 0;
+      }
+    } else {
+      if (mortarState === 'FULL' && keysPressed.e) {
+        mortarState = 'MIXING';
+        mortarMixingTime = 0;
+      } else if (copperBowlState === 'FULL' && keysPressed.e) {
+        if (inventory.length < 10) {
+          inventory.push("Willow Bark Mixture");
+          copperBowlState = 'EMPTY';
+          
+          const slotIndex = inventory.length - 1;
+          const slotX = 488 + slotIndex * (slotSize + slotSpacing);
+          const slotY = 940;
+          activeAnimations.push({
+            type: 'collect_slide',
+            itemName: 'Willow Bark Mixture',
+            startX: 1240,
+            startY: 500,
+            x: 1240,
+            y: 500,
+            endX: slotX + slotSize/2,
+            endY: slotY + slotSize/2,
+            progress: 0,
+            duration: 0.6
+          });
         }
       }
     }
@@ -2326,14 +2617,19 @@ function drawCounterAndItems() {
   drawFlask(ctx, flaskTypes[12], 750, counterY - 88);
   
   // Book/Scroll
-  ctx.fillStyle = '#E5DEC9';
-  ctx.fillRect(950, counterY - 24, 96, 24);
-  ctx.strokeStyle = '#4A3B32';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(950, counterY - 24, 96, 24);
-  ctx.fillStyle = '#4A3B32';
-  ctx.fillRect(965, counterY - 16, 66, 4);
-  ctx.fillRect(965, counterY - 8, 46, 4);
+  if (bookImage.complete) {
+    // book base touches table (Y=520), ribbon hangs down
+    ctx.drawImage(bookImage, 950, 485, 96, 96);
+  } else {
+    ctx.fillStyle = '#E5DEC9';
+    ctx.fillRect(950, counterY - 24, 96, 24);
+    ctx.strokeStyle = '#4A3B32';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(950, counterY - 24, 96, 24);
+    ctx.fillStyle = '#4A3B32';
+    ctx.fillRect(965, counterY - 16, 66, 4);
+    ctx.fillRect(965, counterY - 8, 46, 4);
+  }
 
   drawSprite(ctx, candleSprite, candleColorMap, 1300, counterY - 88, 8); // Candle 2
   if (plantImage.complete) ctx.drawImage(plantImage, 1500, counterY - 128, 128, 128); // Plant 2
@@ -2475,13 +2771,18 @@ function draw() {
     }
   }
   
+  // Worktable View Overlay
+  if (currentState === GameState.WORKTABLE) {
+    drawWorktableView();
+  }
+
   // Cabinet View Overlay
   if (currentState === GameState.CABINET) {
     drawCabinetView();
   }
   
-  // Inventory Hotbar (visible in both rooms during gameplay/cabinet)
-  if (currentState === GameState.GAMEPLAY || currentState === GameState.CABINET) {
+  // Inventory Hotbar (visible in both rooms during gameplay/cabinet/worktable)
+  if (currentState === GameState.GAMEPLAY || currentState === GameState.CABINET || currentState === GameState.WORKTABLE) {
     drawInventoryHotbar();
   }
   
@@ -2492,12 +2793,143 @@ function draw() {
   if (draggedItemIndex !== null) {
     drawInventoryItem(ctx, inventory[draggedItemIndex], draggedItemX, draggedItemY, 4);
   }
+  if (isDraggingFromMortar) {
+    drawInventoryItem(ctx, 'Willow Bark Mixture', draggedItemX, draggedItemY, 4);
+  }
   
   // Transition Overlay
   if (transitionAlpha > 0) {
     ctx.fillStyle = `rgba(0, 0, 0, ${transitionAlpha})`;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   }
+}
+
+// --- WORKTABLE CLOSE-UP VIEW ---
+function drawWorktableView() {
+  // 1. Draw table closeup background (full-screen without distortion)
+  if (tableCloseupImage.complete) {
+    ctx.drawImage(tableCloseupImage, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  } else {
+    ctx.fillStyle = '#4A2E1B';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  }
+  
+  // Clean ambient lighting
+  ctx.fillStyle = 'rgba(25, 20, 35, 0.1)';
+  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  
+  // Ensure completely solid, opaque rendering
+  ctx.globalAlpha = 1.0;
+  ctx.globalCompositeOperation = 'source-over';
+  
+  // 2. Positions and proportions for Mortar & Pestle and Copper Basin (images are 693x360)
+  const mortarCenterX = 680;
+  const mortarCenterY = 500;
+  const mortarH = 340;
+  const mortarW = mortarH * (693 / 360); // 654.5
+  
+  const bowlCenterX = 1240;
+  const bowlCenterY = 500;
+  const bowlH = 340;
+  const bowlW = bowlH * (693 / 360); // 654.5
+  
+  // Grounding soft shadows under props
+  ctx.fillStyle = 'rgba(27, 19, 14, 0.45)';
+  ctx.beginPath();
+  ctx.ellipse(mortarCenterX, mortarCenterY + 130, 115, 22, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.ellipse(bowlCenterX, bowlCenterY + 115, 135, 22, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Draw Solid Mortar & Pestle
+  let currentMortarImg = mortarEmptyImage;
+  if (mortarState === 'EMPTY') {
+    currentMortarImg = mortarEmptyImage;
+  } else if (mortarState === 'HALF') {
+    currentMortarImg = mortarHalfImage;
+  } else if (mortarState === 'FULL' || mortarState === 'MIXED') {
+    currentMortarImg = mortarFull1Image;
+  } else if (mortarState === 'MIXING') {
+    const isFrame1 = Math.floor(mortarMixingTime / 0.2) % 2 === 0;
+    currentMortarImg = isFrame1 ? mortarFull1Image : mortarFull2Image;
+  }
+  
+  if (currentMortarImg && currentMortarImg.complete) {
+    ctx.drawImage(currentMortarImg, mortarCenterX - mortarW/2, mortarCenterY - mortarH/2, mortarW, mortarH);
+  }
+  
+  // Draw Solid Copper Basin (unaltered 693x360 image)
+  let currentBowlImg = copperBowlState === 'FULL' ? copperBowlFullImage : copperBowlEmptyImage;
+  if (currentBowlImg && currentBowlImg.complete) {
+    ctx.drawImage(currentBowlImg, bowlCenterX - bowlW/2, bowlCenterY - bowlH/2, bowlW, bowlH);
+  }
+  
+  // Status Cards / Prompts above props
+  ctx.save();
+  ctx.font = 'bold 22px "EB Garamond", serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  // Mortar status card
+  let mortarStatusText = "Mortar & Pestle (Empty)";
+  if (mortarState === 'HALF') mortarStatusText = "1 Ingredient Added";
+  else if (mortarState === 'FULL') mortarStatusText = "Ready to Mix (Press E / Tap)";
+  else if (mortarState === 'MIXING') mortarStatusText = "Grinding...";
+  else if (mortarState === 'MIXED') mortarStatusText = "Mixed! Drag to Copper Basin";
+  
+  const mLabelW = ctx.measureText(mortarStatusText).width + 28;
+  ctx.fillStyle = '#F5F2EB';
+  ctx.strokeStyle = '#1d1511';
+  ctx.lineWidth = 3;
+  ctx.fillRect(mortarCenterX - mLabelW/2, mortarCenterY - 175, mLabelW, 36);
+  ctx.strokeRect(mortarCenterX - mLabelW/2, mortarCenterY - 175, mLabelW, 36);
+  ctx.fillStyle = '#4A3B32';
+  ctx.fillText(mortarStatusText, mortarCenterX, mortarCenterY - 157);
+  
+  // Copper Basin status card
+  let bowlStatusText = copperBowlState === 'FULL' ? "Full of Mixture (Tap / Press E to Collect)" : "Copper Basin (Empty - Drop mixture here)";
+  const bLabelW = ctx.measureText(bowlStatusText).width + 28;
+  ctx.fillStyle = '#F5F2EB';
+  ctx.fillRect(bowlCenterX - bLabelW/2, bowlCenterY - 160, bLabelW, 36);
+  ctx.strokeRect(bowlCenterX - bLabelW/2, bowlCenterY - 160, bLabelW, 36);
+  ctx.fillStyle = '#4A3B32';
+  ctx.fillText(bowlStatusText, bowlCenterX, bowlCenterY - 142);
+  
+  ctx.restore();
+  
+  // 3. Mixing Progress Arc during 5-second mixing
+  if (mortarState === 'MIXING') {
+    const progress = mortarMixingTime / 5.0;
+    
+    ctx.beginPath();
+    ctx.arc(mortarCenterX, mortarCenterY, 80, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(29, 21, 17, 0.5)';
+    ctx.lineWidth = 10;
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.arc(mortarCenterX, mortarCenterY, 80, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+    ctx.strokeStyle = '#F4C05E'; // glowing gold Progress Arc
+    ctx.lineWidth = 10;
+    ctx.stroke();
+  }
+  
+  // 4. Close Button [Esc]
+  ctx.fillStyle = '#F5F2EB';
+  ctx.strokeStyle = '#1d1511';
+  ctx.lineWidth = 4;
+  ctx.fillRect(1740, 50, 120, 60);
+  ctx.strokeRect(1740, 50, 120, 60);
+  
+  ctx.fillStyle = '#4A3B32';
+  ctx.font = 'bold 24px "EB Garamond", serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('CLOSE', 1800, 75);
+  ctx.font = '14px "EB Garamond", serif';
+  ctx.fillText('[Esc]', 1800, 95);
 }
 
 // --- WORKROOM RENDER HELPERS ---
@@ -3055,9 +3487,9 @@ function drawWorkroomBackground() {
     }
   });
 
-  // Draw Vintage Rug under the Worktable (from X=770 to 1150, Y=635 to 780)
+  // Draw Vintage Rug under the Worktable (from X=770 to 1150, Y=735 to 880 - shifted down 100px)
   const rx = 770;
-  const ry = 635;
+  const ry = 735;
   const rw = 380;
   const rh = 145;
 
@@ -3173,15 +3605,15 @@ function drawWorkroomEntities() {
       }
     },
     {
-      y: 738,
+      y: 838,
       draw: () => {
-        // Draw Worktable grounding shadow
+        // Draw Worktable grounding shadow (shifted down 100px)
         ctx.fillStyle = 'rgba(27, 19, 14, 0.45)';
         ctx.beginPath();
-        ctx.ellipse(958, 732, 120, 12, 0, 0, Math.PI * 2);
+        ctx.ellipse(958, 832, 120, 12, 0, 0, Math.PI * 2);
         ctx.fill();
-        // Draw Worktable (Y=610, bottom Y=738)
-        drawSprite(ctx, worktableSprite, worktableColorMap, 830, 610, pixelScale);
+        // Draw Worktable (Y=710, bottom Y=838 - shifted down 100px)
+        drawSprite(ctx, worktableSprite, worktableColorMap, 830, 710, pixelScale);
       }
     },
     {
@@ -3401,6 +3833,20 @@ function drawInventoryItem(ctx, name, x, y, scale) {
   const b = bottles.find(i => i.name === name);
   if (b) {
     drawCabinetJar(ctx, b, x, y, scale);
+    return;
+  }
+  if (name === "Willow Bark Mixture") {
+    // Draw miniature copper dish with mixture
+    ctx.fillStyle = '#1B130E';
+    ctx.fillRect(x - 22, y - 8, 44, 22);
+    ctx.fillStyle = '#B57F4F';
+    ctx.fillRect(x - 20, y - 6, 40, 18);
+    ctx.fillStyle = '#D9C1A0';
+    ctx.fillRect(x - 18, y - 4, 36, 3);
+    ctx.fillStyle = '#8A3B2B'; // reddish brown ground mixture
+    ctx.fillRect(x - 14, y - 1, 28, 11);
+    ctx.fillStyle = '#B05535';
+    ctx.fillRect(x - 10, y + 1, 20, 7);
     return;
   }
   if (name === "Willow Bark Decoction") {
@@ -3645,36 +4091,52 @@ function renderBookPage() {
 
   // Bind actions
   const letsMakeBtn = document.getElementById('lets-make-btn');
-  if (letsMakeBtn && !isAcquired) {
-    letsMakeBtn.addEventListener('click', () => {
-      acquireRecipe(activeRecipePage);
-    });
+  if (letsMakeBtn) {
+    letsMakeBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (!acquiredRecipes.includes(activeRecipePage)) {
+        acquireRecipe(activeRecipePage);
+      }
+    };
   }
 
   const unacquireLink = document.getElementById('unacquire-link');
   if (unacquireLink) {
-    unacquireLink.addEventListener('click', (e) => {
+    unacquireLink.onclick = (e) => {
       e.stopPropagation();
       unacquireRecipe(activeRecipePage);
-    });
+    };
   }
 }
 
 function acquireRecipe(page) {
-  if (!acquiredRecipes.includes(page)) {
-    acquiredRecipes.push(page);
+  const pageNum = parseInt(page);
+  if (!acquiredRecipes.includes(pageNum)) {
+    acquiredRecipes.push(pageNum);
     acquiredRecipes.sort((a, b) => a - b);
-    renderBookPage();
-    renderAcquiredRecipes();
+  }
+  renderBookPage();
+  renderAcquiredRecipes();
+  if (document.getElementById('manuscript-ui') && !document.getElementById('manuscript-ui').classList.contains('hidden')) {
+    renderManuscriptPage();
   }
 }
 
 function unacquireRecipe(page) {
-  const index = acquiredRecipes.indexOf(page);
+  const pageNum = parseInt(page);
+  const index = acquiredRecipes.indexOf(pageNum);
   if (index > -1) {
     acquiredRecipes.splice(index, 1);
-    renderBookPage();
-    renderAcquiredRecipes();
+  }
+  renderBookPage();
+  renderAcquiredRecipes();
+  if (document.getElementById('manuscript-ui') && !document.getElementById('manuscript-ui').classList.contains('hidden')) {
+    if (acquiredRecipes.length > 0) {
+      activeRecipePage = acquiredRecipes[0];
+      renderManuscriptPage();
+    } else {
+      closeManuscriptView();
+    }
   }
 }
 
@@ -3702,10 +4164,87 @@ function renderAcquiredRecipes() {
     
     badge.addEventListener('click', (e) => {
       e.stopPropagation();
-      openBookView(page);
+      openManuscriptView(page);
     });
     panel.appendChild(badge);
   });
+}
+
+function openManuscriptView(page = 1) {
+  currentState = GameState.BOOK;
+  activeRecipePage = parseInt(page) || 1;
+  interactionPrompt.classList.add('hidden');
+  document.getElementById('manuscript-ui').classList.remove('hidden');
+  renderManuscriptPage();
+}
+
+function closeManuscriptView() {
+  currentState = GameState.GAMEPLAY;
+  document.getElementById('manuscript-ui').classList.add('hidden');
+}
+
+function renderManuscriptPage() {
+  const pageNum = parseInt(activeRecipePage) || 1;
+  const recipe = recipes[pageNum] || recipes[1];
+  const isAcquired = acquiredRecipes.includes(pageNum);
+  
+  const container = document.getElementById('manuscript-page-content');
+  if (!container) return;
+
+  function isIngredientInInventory(recipeIngString) {
+    const normalized = recipeIngString.toLowerCase();
+    if (normalized.includes("willow bark") && inventory.includes("Willow Bark")) return true;
+    if (normalized.includes("water") && inventory.includes("Water")) return true;
+    if (normalized.includes("beeswax") && inventory.includes("Beeswax")) return true;
+    if (normalized.includes("fat") && inventory.includes("Fats")) return true;
+    if (normalized.includes("herbal extract") && inventory.includes("Herbal Extract")) return true;
+    if (normalized.includes("tulsi") && inventory.includes("Tulsi")) return true;
+    if (normalized.includes("ginger") && inventory.includes("Ginger")) return true;
+    if (normalized.includes("long pepper") || normalized.includes("pippali") || normalized.includes("black pepper")) {
+      if (inventory.includes("Black Pepper")) return true;
+    }
+    if (normalized.includes("jaggery") && inventory.includes("Jaggery")) return true;
+    if (normalized.includes("honey") && inventory.includes("Honey")) return true;
+    return false;
+  }
+
+  container.innerHTML = `
+    <div class="recipe-header">
+      <h3 class="recipe-usage">${recipe.usage}</h3>
+      <div class="recipe-title-row" style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+        <h2 class="recipe-title" style="margin: 0; font-size: 2.4rem;">${recipe.title}</h2>
+      </div>
+      <div class="book-divider" style="background: #c2b59b; margin: 15px 0 20px;"></div>
+    </div>
+    
+    <h4 class="recipe-section-title">Ingredients</h4>
+    <ul class="recipe-ingredients-list">
+      ${recipe.ingredients.map(ing => {
+        const isPresent = isIngredientInInventory(ing);
+        return `<li style="display: flex; align-items: center; gap: 8px;">${ing} ${isPresent ? '<span class="ing-check" style="font-size: 1.2rem;">✅</span>' : ''}</li>`;
+      }).join('')}
+    </ul>
+    
+    <h4 class="recipe-section-title">Preparation Steps</h4>
+    <ol class="recipe-steps-list">
+      ${recipe.steps.map(step => `<li>${step}</li>`).join('')}
+    </ol>
+    
+    ${isAcquired ? `
+    <div class="lets-make-container" style="padding-top: 25px; margin-top: auto;">
+      <button id="manuscript-unacquire-link" class="unacquire-link">Unacquire recipe</button>
+    </div>
+    ` : ''}
+  `;
+
+  // Bind unacquire action
+  const unacquireLink = document.getElementById('manuscript-unacquire-link');
+  if (unacquireLink) {
+    unacquireLink.onclick = (e) => {
+      e.stopPropagation();
+      unacquireRecipe(pageNum);
+    };
+  }
 }
 
 function initBookUIEvents() {
@@ -3734,6 +4273,16 @@ function initBookUIEvents() {
 
   // Background overlay clicks
   document.querySelector('.book-overlay-bg').addEventListener('click', closeBookView);
+
+  // Manuscript close listeners
+  const manuscriptCloseBtn = document.getElementById('manuscript-close-btn');
+  if (manuscriptCloseBtn) {
+    manuscriptCloseBtn.addEventListener('click', closeManuscriptView);
+  }
+  const manuscriptOverlayBg = document.querySelector('#manuscript-ui .book-overlay-bg');
+  if (manuscriptOverlayBg) {
+    manuscriptOverlayBg.addEventListener('click', closeManuscriptView);
+  }
 }
 
 // Initialize book events on load

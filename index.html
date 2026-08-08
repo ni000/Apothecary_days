@@ -93,6 +93,27 @@
       </div>
 
 
+      <!-- Manuscript UI Overlay (Single Page View for Acquired Recipes) -->
+      <div id="manuscript-ui" class="overlay hidden">
+        <div class="book-overlay-bg"></div>
+        <div class="manuscript-container">
+          <!-- Gold Corners -->
+          <div class="corner-bracket top-left"></div>
+          <div class="corner-bracket top-right"></div>
+          <div class="corner-bracket bottom-left"></div>
+          <div class="corner-bracket bottom-right"></div>
+          
+          <!-- Close Button -->
+          <button id="manuscript-close-btn" class="book-close-btn" aria-label="Close Manuscript">&times;</button>
+          
+          <div class="manuscript-page">
+            <div class="page-content" id="manuscript-page-content">
+              <!-- Dynamically filled by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Acquired Recipes Container (Floating badges on the screen) -->
       <div id="acquired-recipes-container"></div>
     </div>
