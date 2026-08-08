@@ -539,6 +539,21 @@ body {
   box-shadow: none;
 }
 
+.lets-make-btn.unacquire {
+  background: #c0392b;
+  border-color: #5c1212;
+  box-shadow: 0 3px 0 #5c1212;
+}
+.lets-make-btn.unacquire:hover {
+  background: #e74c3c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #5c1212;
+}
+.lets-make-btn.unacquire:active {
+  transform: translateY(1px);
+  box-shadow: 0 0px 0 #5c1212;
+}
+
 .unacquire-link {
   font-size: 1.1rem;
   color: #8b5e3c;

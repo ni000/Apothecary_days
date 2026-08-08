@@ -135,8 +135,8 @@ canvas.addEventListener('mousedown', (e) => {
       return;
     }
     
-    // Mortar & Pestle bounding box: X [530, 830], Y [360, 660]
-    if (mouseCanvasX >= 530 && mouseCanvasX <= 830 && mouseCanvasY >= 360 && mouseCanvasY <= 660) {
+    // Mortar & Pestle bounding box: X [560, 800], Y [390, 630]
+    if (mouseCanvasX >= 560 && mouseCanvasX <= 800 && mouseCanvasY >= 390 && mouseCanvasY <= 630) {
       if (mortarState === 'FULL') {
         mortarState = 'MIXING';
         mortarMixingTime = 0;
@@ -150,8 +150,8 @@ canvas.addEventListener('mousedown', (e) => {
       }
     }
     
-    // Copper Bowl bounding box: X [1070, 1410], Y [370, 630]
-    if (mouseCanvasX >= 1070 && mouseCanvasX <= 1410 && mouseCanvasY >= 370 && mouseCanvasY <= 630) {
+    // Copper Bowl bounding box: X [1050, 1430], Y [330, 630]
+    if (mouseCanvasX >= 1050 && mouseCanvasX <= 1430 && mouseCanvasY >= 330 && mouseCanvasY <= 630) {
       if (copperBowlState === 'FULL') {
         if (inventory.length < 10) {
           inventory.push("Willow Bark Mixture");
@@ -308,7 +308,7 @@ canvas.addEventListener('touchstart', (e) => {
       return;
     }
     // Mortar & Pestle
-    if (mouseCanvasX >= 530 && mouseCanvasX <= 830 && mouseCanvasY >= 360 && mouseCanvasY <= 660) {
+    if (mouseCanvasX >= 560 && mouseCanvasX <= 800 && mouseCanvasY >= 390 && mouseCanvasY <= 630) {
       if (mortarState === 'FULL') {
         mortarState = 'MIXING';
         mortarMixingTime = 0;
@@ -322,7 +322,7 @@ canvas.addEventListener('touchstart', (e) => {
       }
     }
     // Copper Bowl
-    if (mouseCanvasX >= 1070 && mouseCanvasX <= 1410 && mouseCanvasY >= 370 && mouseCanvasY <= 630) {
+    if (mouseCanvasX >= 1050 && mouseCanvasX <= 1430 && mouseCanvasY >= 330 && mouseCanvasY <= 630) {
       if (copperBowlState === 'FULL') {
         if (inventory.length < 10) {
           inventory.push("Willow Bark Mixture");
@@ -454,7 +454,7 @@ canvas.addEventListener('mouseup', () => {
   if (draggedItemIndex !== null) {
     if (currentState === GameState.WORKTABLE) {
       // Check if dropped onto Mortar & Pestle
-      if (mouseCanvasX >= 520 && mouseCanvasX <= 840 && mouseCanvasY >= 350 && mouseCanvasY <= 670) {
+      if (mouseCanvasX >= 550 && mouseCanvasX <= 810 && mouseCanvasY >= 380 && mouseCanvasY <= 640) {
         const itemName = inventory[draggedItemIndex];
         if ((itemName === "Willow Bark" || itemName === "Water") && !mortarIngredients.includes(itemName) && (mortarState === 'EMPTY' || mortarState === 'HALF')) {
           mortarIngredients.push(itemName);
@@ -477,7 +477,7 @@ canvas.addEventListener('mouseup', () => {
   
   if (isDraggingFromMortar) {
     // Check if dropped onto Copper Bowl
-    if (mouseCanvasX >= 1050 && mouseCanvasX <= 1430 && mouseCanvasY >= 350 && mouseCanvasY <= 650) {
+    if (mouseCanvasX >= 1040 && mouseCanvasX <= 1440 && mouseCanvasY >= 320 && mouseCanvasY <= 640) {
       mortarState = 'EMPTY';
       mortarIngredients = [];
       copperBowlState = 'FULL';
@@ -505,7 +505,7 @@ canvas.addEventListener('touchend', () => {
   if (draggedItemIndex !== null) {
     if (currentState === GameState.WORKTABLE) {
       // Check if dropped onto Mortar & Pestle
-      if (mouseCanvasX >= 520 && mouseCanvasX <= 840 && mouseCanvasY >= 350 && mouseCanvasY <= 670) {
+      if (mouseCanvasX >= 550 && mouseCanvasX <= 810 && mouseCanvasY >= 380 && mouseCanvasY <= 640) {
         const itemName = inventory[draggedItemIndex];
         if ((itemName === "Willow Bark" || itemName === "Water") && !mortarIngredients.includes(itemName) && (mortarState === 'EMPTY' || mortarState === 'HALF')) {
           mortarIngredients.push(itemName);
@@ -528,7 +528,7 @@ canvas.addEventListener('touchend', () => {
   
   if (isDraggingFromMortar) {
     // Check if dropped onto Copper Bowl
-    if (mouseCanvasX >= 1050 && mouseCanvasX <= 1430 && mouseCanvasY >= 350 && mouseCanvasY <= 650) {
+    if (mouseCanvasX >= 1040 && mouseCanvasX <= 1440 && mouseCanvasY >= 320 && mouseCanvasY <= 640) {
       mortarState = 'EMPTY';
       mortarIngredients = [];
       copperBowlState = 'FULL';
@@ -2824,26 +2824,26 @@ function drawWorktableView() {
   
   // 2. Positions and proportions for Mortar & Pestle and Copper Basin (images are 693x360)
   const mortarCenterX = 680;
-  const mortarCenterY = 480;
-  const mortarH = 280;
-  const mortarW = mortarH * (693 / 360); // 539
+  const mortarCenterY = 510;
+  const mortarH = 215;
+  const mortarW = mortarH * (693 / 360); // 414
   
   const bowlCenterX = 1240;
   const bowlCenterY = 480;
-  const bowlH = 280;
-  const bowlW = bowlH * (693 / 360); // 539
+  const bowlH = 340;
+  const bowlW = bowlH * (693 / 360); // 654.5
   
   // Grounding soft shadows under props
   ctx.fillStyle = 'rgba(27, 19, 14, 0.45)';
   ctx.beginPath();
-  ctx.ellipse(mortarCenterX, mortarCenterY + 110, 95, 18, 0, 0, Math.PI * 2);
+  ctx.ellipse(mortarCenterX, mortarCenterY + 80, 75, 14, 0, 0, Math.PI * 2);
   ctx.fill();
   
   ctx.beginPath();
-  ctx.ellipse(bowlCenterX, bowlCenterY + 110, 110, 20, 0, 0, Math.PI * 2);
+  ctx.ellipse(bowlCenterX, bowlCenterY + 115, 140, 24, 0, 0, Math.PI * 2);
   ctx.fill();
   
-  // Draw Solid Mortar & Pestle
+  // Draw Solid Mortar & Pestle with warm amber color grading filter
   let currentMortarImg = mortarEmptyImage;
   if (mortarState === 'EMPTY') {
     currentMortarImg = mortarEmptyImage;
@@ -2857,7 +2857,11 @@ function drawWorktableView() {
   }
   
   if (currentMortarImg && currentMortarImg.complete) {
+    ctx.save();
+    // Warm, golden filter integration matching candlelight shading
+    ctx.filter = 'sepia(0.3) saturate(1.25) brightness(0.95) hue-rotate(-6deg)';
     ctx.drawImage(currentMortarImg, mortarCenterX - mortarW/2, mortarCenterY - mortarH/2, mortarW, mortarH);
+    ctx.restore();
   }
   
   // Draw Solid Copper Basin (unaltered 693x360 image)
@@ -2883,19 +2887,19 @@ function drawWorktableView() {
   ctx.fillStyle = '#F5F2EB';
   ctx.strokeStyle = '#1d1511';
   ctx.lineWidth = 3;
-  ctx.fillRect(mortarCenterX - mLabelW/2, mortarCenterY - 145, mLabelW, 36);
-  ctx.strokeRect(mortarCenterX - mLabelW/2, mortarCenterY - 145, mLabelW, 36);
+  ctx.fillRect(mortarCenterX - mLabelW/2, mortarCenterY - 115, mLabelW, 36);
+  ctx.strokeRect(mortarCenterX - mLabelW/2, mortarCenterY - 115, mLabelW, 36);
   ctx.fillStyle = '#4A3B32';
-  ctx.fillText(mortarStatusText, mortarCenterX, mortarCenterY - 127);
+  ctx.fillText(mortarStatusText, mortarCenterX, mortarCenterY - 97);
   
   // Copper Basin status card
   let bowlStatusText = copperBowlState === 'FULL' ? "Full of Mixture (Tap / Press E to Collect)" : "Copper Basin (Empty - Drop mixture here)";
   const bLabelW = ctx.measureText(bowlStatusText).width + 28;
   ctx.fillStyle = '#F5F2EB';
-  ctx.fillRect(bowlCenterX - bLabelW/2, bowlCenterY - 145, bLabelW, 36);
-  ctx.strokeRect(bowlCenterX - bLabelW/2, bowlCenterY - 145, bLabelW, 36);
+  ctx.fillRect(bowlCenterX - bLabelW/2, bowlCenterY - 165, bLabelW, 36);
+  ctx.strokeRect(bowlCenterX - bLabelW/2, bowlCenterY - 165, bLabelW, 36);
   ctx.fillStyle = '#4A3B32';
-  ctx.fillText(bowlStatusText, bowlCenterX, bowlCenterY - 127);
+  ctx.fillText(bowlStatusText, bowlCenterX, bowlCenterY - 147);
   
   ctx.restore();
   
@@ -2904,13 +2908,13 @@ function drawWorktableView() {
     const progress = mortarMixingTime / 5.0;
     
     ctx.beginPath();
-    ctx.arc(mortarCenterX, mortarCenterY, 70, 0, Math.PI * 2);
+    ctx.arc(mortarCenterX, mortarCenterY, 55, 0, Math.PI * 2);
     ctx.strokeStyle = 'rgba(29, 21, 17, 0.5)';
     ctx.lineWidth = 10;
     ctx.stroke();
     
     ctx.beginPath();
-    ctx.arc(mortarCenterX, mortarCenterY, 70, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+    ctx.arc(mortarCenterX, mortarCenterY, 55, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
     ctx.strokeStyle = '#F4C05E'; // glowing gold Progress Arc
     ctx.lineWidth = 10;
     ctx.stroke();
@@ -4062,8 +4066,8 @@ function renderBookPage() {
       <h3 class="recipe-usage">${recipe.usage}</h3>
       <div class="recipe-title-row" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
         <h2 class="recipe-title" style="margin: 0; font-size: 2.2rem;">${recipe.title}</h2>
-        <button id="lets-make-btn" class="lets-make-btn small-btn ${isAcquired ? 'acquired' : ''}">
-          ${isAcquired ? 'Acquired ✓' : "Acquire"}
+        <button id="lets-make-btn" class="lets-make-btn small-btn ${isAcquired ? 'unacquire' : ''}">
+          ${isAcquired ? 'Unacquire' : "Acquire"}
         </button>
       </div>
       <div class="book-divider" style="margin: 10px 0 15px;"></div>
@@ -4081,12 +4085,6 @@ function renderBookPage() {
     <ol class="recipe-steps-list">
       ${recipe.steps.map(step => `<li>${step}</li>`).join('')}
     </ol>
-    
-    ${isAcquired ? `
-    <div class="lets-make-container" style="padding-top: 15px; margin-top: auto;">
-      <button id="unacquire-link" class="unacquire-link">Unacquire recipe</button>
-    </div>
-    ` : ''}
   `;
 
   // Bind actions
@@ -4094,7 +4092,9 @@ function renderBookPage() {
   if (letsMakeBtn) {
     letsMakeBtn.onclick = (e) => {
       e.stopPropagation();
-      if (!acquiredRecipes.includes(activeRecipePage)) {
+      if (isAcquired) {
+        unacquireRecipe(activeRecipePage);
+      } else {
         acquireRecipe(activeRecipePage);
       }
     };
