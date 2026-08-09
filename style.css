@@ -1,3 +1,10 @@
+@font-face {
+  font-family: 'Alagard';
+  src: url('alagard.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 /* Reset and Base Styles */
 * {
   margin: 0;
@@ -63,9 +70,10 @@ body {
 /* Softer Cottagecore backgrounds */
 #exterior-bg {
   background-color: var(--soft-green);
-  background-image: 
-    repeating-linear-gradient(90deg, transparent, transparent 64px, rgba(74, 59, 50, 0.1) 64px, rgba(74, 59, 50, 0.1) 128px),
-    repeating-linear-gradient(0deg, transparent, transparent 64px, rgba(74, 59, 50, 0.1) 64px, rgba(74, 59, 50, 0.1) 128px);
+  background-image: url('apothecary_booth.gif');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 #interior-bg {
@@ -113,31 +121,43 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: var(--soft-green);
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.6) 100%);
   transition: opacity 0.8s ease-in-out;
   z-index: 100 !important;
   pointer-events: auto !important;
 }
 
 .game-title {
-  font-size: 6rem;
+  font-family: 'Alagard', serif;
+  font-size: 8.5rem;
   color: var(--soft-light);
   margin-bottom: 50px;
-  letter-spacing: 5px;
+  letter-spacing: 4px;
   text-transform: uppercase;
   font-weight: bold;
-  text-shadow: 2px 2px 0 var(--soft-dark);
+  background: linear-gradient(
+    120deg,
+    var(--soft-light) 30%,
+    #ffffff 50%,
+    var(--soft-light) 70%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShine 3s linear infinite;
+  filter: drop-shadow(4px 4px 0px var(--soft-dark));
+  text-align: center;
 }
 
 /* Soft Retro Button */
 .fantasy-btn {
-  font-family: inherit;
+  font-family: 'VT323', monospace;
   font-weight: bold;
-  font-size: 2.5rem;
+  font-size: 2.8rem;
   color: var(--soft-dark);
   background: var(--soft-light);
   border: 4px solid var(--soft-dark);
-  padding: 15px 50px;
+  padding: 10px 50px;
   cursor: pointer;
   pointer-events: auto !important;
   z-index: 101 !important;
@@ -145,6 +165,24 @@ body {
   text-transform: uppercase;
   transition: all 0.2s;
   border-radius: 8px;
+  overflow: hidden;
+}
+
+.fantasy-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  pointer-events: none;
 }
 
 .fantasy-btn:hover {
@@ -153,9 +191,31 @@ body {
   box-shadow: 0 4px 0 var(--soft-dark);
 }
 
+.fantasy-btn:hover::after {
+  animation: btnShine 0.8s ease-in-out;
+}
+
 .fantasy-btn:active {
   transform: translateY(2px);
   box-shadow: 0 0px 0 var(--soft-dark);
+}
+
+@keyframes textShine {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes btnShine {
+  0% {
+    left: -150%;
+  }
+  100% {
+    left: 150%;
+  }
 }
 
 /* HUD */
