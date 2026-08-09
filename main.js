@@ -2,7 +2,7 @@
 const CANVAS_WIDTH = 1920;
 const CANVAS_HEIGHT = 1080;
 const PLAYER_SPEED = 400; // pixels per second
-const NPC_SPEED = 150;
+const NPC_SPEED = 200;
 
 // Game State Enum
 const GameState = { MENU: 'MENU', TRANSITION: 'TRANSITION', GAMEPLAY: 'GAMEPLAY', DIALOGUE: 'DIALOGUE', CABINET: 'CABINET', BOOK: 'BOOK', WORKTABLE: 'WORKTABLE' };
@@ -25,8 +25,8 @@ const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
 // Input Handling
-const keys = { w: false, a: false, s: false, d: false, e: false };
-const keysPressed = { e: false };
+const keys = { w: false, a: false, s: false, d: false, e: false, space: false };
+const keysPressed = { e: false, space: false };
 
 function handleKeyDown(e) {
   if (e.key === 'Escape' && currentState === GameState.CABINET) {
@@ -41,19 +41,25 @@ function handleKeyDown(e) {
   }
 
   let key = e.key.toLowerCase();
-  
+
   // Map arrow keys
   if (e.key === 'ArrowUp') key = 'w';
   if (e.key === 'ArrowDown') key = 's';
   if (e.key === 'ArrowLeft') key = 'a';
   if (e.key === 'ArrowRight') key = 'd';
-  
+
   // Map codes for bulletproof input
   if (e.code === 'KeyW' || e.code === 'ArrowUp') key = 'w';
   if (e.code === 'KeyS' || e.code === 'ArrowDown') key = 's';
   if (e.code === 'KeyA' || e.code === 'ArrowLeft') key = 'a';
   if (e.code === 'KeyD' || e.code === 'ArrowRight') key = 'd';
   if (e.code === 'KeyE') key = 'e';
+
+  if (e.code === 'Space' || e.key === ' ') {
+    keys.space = true;
+    keysPressed.space = true;
+    e.preventDefault();
+  }
 
   if (key in keys) {
     keys[key] = true;
@@ -65,16 +71,20 @@ function handleKeyDown(e) {
 
 function handleKeyUp(e) {
   let key = e.key.toLowerCase();
-  
+
   if (e.key === 'ArrowUp') key = 'w';
   if (e.key === 'ArrowDown') key = 's';
   if (e.key === 'ArrowLeft') key = 'a';
   if (e.key === 'ArrowRight') key = 'd';
-  
+
   if (e.code === 'KeyW' || e.code === 'ArrowUp') key = 'w';
   if (e.code === 'KeyS' || e.code === 'ArrowDown') key = 's';
   if (e.code === 'KeyA' || e.code === 'ArrowLeft') key = 'a';
   if (e.code === 'KeyD' || e.code === 'ArrowRight') key = 'd';
+
+  if (e.code === 'Space' || e.key === ' ') {
+    keys.space = false;
+  }
 
   if (key in keys) {
     keys[key] = false;
@@ -91,7 +101,7 @@ canvas.addEventListener('mousemove', (e) => {
   const pos = getCanvasMousePos(e);
   mouseCanvasX = pos.x;
   mouseCanvasY = pos.y;
-  if (draggedItemIndex !== null) {
+  if (draggedItemIndex !== null || isDraggingFromMortar) {
     draggedItemX = mouseCanvasX;
     draggedItemY = mouseCanvasY;
   }
@@ -100,7 +110,7 @@ canvas.addEventListener('touchmove', (e) => {
   const pos = getCanvasMousePos(e);
   mouseCanvasX = pos.x;
   mouseCanvasY = pos.y;
-  if (draggedItemIndex !== null) {
+  if (draggedItemIndex !== null || isDraggingFromMortar) {
     draggedItemX = mouseCanvasX;
     draggedItemY = mouseCanvasY;
   }
@@ -127,16 +137,16 @@ canvas.addEventListener('mousedown', (e) => {
       }
     }
   }
-  
+
   if (currentState === GameState.WORKTABLE) {
     // Check Close Button: bounding box x [1740, 1860], y [50, 110]
     if (mouseCanvasX >= 1740 && mouseCanvasX <= 1860 && mouseCanvasY >= 50 && mouseCanvasY <= 110) {
       exitWorktableView();
       return;
     }
-    
-    // Mortar & Pestle bounding box: X [560, 800], Y [390, 630]
-    if (mouseCanvasX >= 560 && mouseCanvasX <= 800 && mouseCanvasY >= 390 && mouseCanvasY <= 630) {
+
+    // Mortar & Pestle bounding box: X [290, 870], Y [330, 630]
+    if (mouseCanvasX >= 290 && mouseCanvasX <= 870 && mouseCanvasY >= 330 && mouseCanvasY <= 630) {
       if (mortarState === 'FULL') {
         mortarState = 'MIXING';
         mortarMixingTime = 0;
@@ -149,26 +159,26 @@ canvas.addEventListener('mousedown', (e) => {
         return;
       }
     }
-    
-    // Copper Bowl bounding box: X [1050, 1430], Y [330, 630]
-    if (mouseCanvasX >= 1050 && mouseCanvasX <= 1430 && mouseCanvasY >= 330 && mouseCanvasY <= 630) {
+
+    // Copper Bowl bounding box: X [930, 1590], Y [310, 650]
+    if (mouseCanvasX >= 930 && mouseCanvasX <= 1590 && mouseCanvasY >= 310 && mouseCanvasY <= 650) {
       if (copperBowlState === 'FULL') {
         if (inventory.length < 10) {
           inventory.push("Willow Bark Mixture");
-          copperBowlState = 'EMPTY';
-          
+          copperBowlState = 'COLLECTED';
+
           const slotIndex = inventory.length - 1;
           const slotX = 488 + slotIndex * (slotSize + slotSpacing);
           const slotY = 940;
           activeAnimations.push({
             type: 'collect_slide',
             itemName: 'Willow Bark Mixture',
-            startX: 1240,
-            startY: 500,
-            x: 1240,
-            y: 500,
-            endX: slotX + slotSize/2,
-            endY: slotY + slotSize/2,
+            startX: 1260,
+            startY: 480,
+            x: 1260,
+            y: 480,
+            endX: slotX + slotSize / 2,
+            endY: slotY + slotSize / 2,
             progress: 0,
             duration: 0.6
           });
@@ -182,7 +192,7 @@ canvas.addEventListener('mousedown', (e) => {
       exitCabinetView();
       return;
     }
-    
+
     // Check click on jars
     updateHoveredJar();
     if (hoveredJarIndex !== null) {
@@ -195,7 +205,7 @@ canvas.addEventListener('mousedown', (e) => {
     }
     // Check tap on Stove (x: [300, 420], y: [410, 476])
     if (mouseCanvasX >= 300 && mouseCanvasX <= 420 && mouseCanvasY >= 410 && mouseCanvasY <= 476) {
-      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 360, 2) + Math.pow((player.y + player.renderHeight/2) - 443, 2));
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth / 2) - 360, 2) + Math.pow((player.y + player.renderHeight / 2) - 443, 2));
       const hasMixture = inventory.includes("Willow Bark Mixture");
       const hasBottle = inventory.some(name => bottles.some(b => b.name === name));
       if (dist < 250 && (currentCustomerState === CustomerState.STEPS || currentCustomerState === CustomerState.CRAFTING) && hasMixture && hasBottle && !inventory.includes("Willow Bark Decoction")) {
@@ -206,7 +216,7 @@ canvas.addEventListener('mousedown', (e) => {
     }
     // Check tap on Barrel (x: [670, 830], y: [383, 543])
     else if (mouseCanvasX >= 670 && mouseCanvasX <= 830 && mouseCanvasY >= 383 && mouseCanvasY <= 543) {
-      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 750, 2) + Math.pow((player.y + player.renderHeight/2) - 463, 2));
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth / 2) - 750, 2) + Math.pow((player.y + player.renderHeight / 2) - 463, 2));
       if (dist < 250 && !inventory.includes('Water')) {
         activeHoldBarrel = true;
         holdTime = 0;
@@ -214,7 +224,7 @@ canvas.addEventListener('mousedown', (e) => {
     }
     // Check tap on Main Cabinet
     else if (mouseCanvasX >= 850 && mouseCanvasX <= 1070 && mouseCanvasY >= 100 && mouseCanvasY <= 543) {
-      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 960, 2) + Math.pow((player.y + player.renderHeight/2) - 500, 2));
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth / 2) - 960, 2) + Math.pow((player.y + player.renderHeight / 2) - 500, 2));
       if (dist < 250) {
         activeCabinet = 'INGREDIENT';
         openCabinetView();
@@ -222,7 +232,7 @@ canvas.addEventListener('mousedown', (e) => {
     }
     // Check tap on Second Cabinet (Bottle Cabinet)
     else if (mouseCanvasX >= 1460 && mouseCanvasX <= 1580 && mouseCanvasY >= 290 && mouseCanvasY <= 470) {
-      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 1520, 2) + Math.pow((player.y + player.renderHeight/2) - 440, 2));
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth / 2) - 1520, 2) + Math.pow((player.y + player.renderHeight / 2) - 440, 2));
       if (dist < 250) {
         activeCabinet = 'BOTTLE';
         openCabinetView();
@@ -231,7 +241,7 @@ canvas.addEventListener('mousedown', (e) => {
   } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.WORKROOM) {
     // Check tap on Worktable (x: [830, 1090], y: [700, 840])
     if (mouseCanvasX >= 830 && mouseCanvasX <= 1090 && mouseCanvasY >= 700 && mouseCanvasY <= 840) {
-      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 960, 2) + Math.pow((player.y + player.renderHeight) - 770, 2));
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth / 2) - 960, 2) + Math.pow((player.y + player.renderHeight) - 770, 2));
       if (dist < 250) {
         openWorktableView();
         return;
@@ -240,14 +250,14 @@ canvas.addEventListener('mousedown', (e) => {
   } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.SHOP) {
     // Check tap on NPC
     if (npc.active && npc.reachedCounter && mouseCanvasX >= npc.x && mouseCanvasX <= npc.x + npc.renderWidth && mouseCanvasY >= npc.y && mouseCanvasY <= npc.y + npc.renderHeight) {
-      const xDist = Math.abs((player.x + player.renderWidth/2) - (npc.x + npc.renderWidth/2));
-      const yDist = Math.abs((player.y + player.renderHeight/2) - (npc.y + npc.renderHeight/2));
+      const xDist = Math.abs((player.x + player.renderWidth / 2) - (npc.x + npc.renderWidth / 2));
+      const yDist = Math.abs((player.y + player.renderHeight / 2) - (npc.y + npc.renderHeight / 2));
       if (xDist < 350 && yDist < 420) {
         if (currentCustomerState === CustomerState.DELIVERY) {
-          activeDialogueString = "Ah, thank you! The pain is fading already. Here's your payment!";
-          startDialogue();
+          startDialogue("Thank you! This works like magic");
           const remedyIndex = inventory.indexOf("Willow Bark Decoction");
           if (remedyIndex > -1) inventory.splice(remedyIndex, 1);
+          playMoneySound();
           updateCoins(100);
           npc.reachedCounter = false;
           npc.targetX = CANVAS_WIDTH + 200;
@@ -260,20 +270,11 @@ canvas.addEventListener('mousedown', (e) => {
         }
       }
     }
-    // Check tap on Book
-    else if (mouseCanvasX >= 950 && mouseCanvasX <= 1046 && mouseCanvasY >= 496 && mouseCanvasY <= 520) {
-      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 998, 2) + Math.pow((player.y + player.renderHeight/2) - 496, 2));
-      if (dist < 250) {
-        if (currentCustomerState === CustomerState.IDLE) {
-          isShopOpen = true;
-          currentCustomerState = CustomerState.ARRIVAL;
-          updateObjective();
-          npc.active = true;
-          npc.reachedCounter = false;
-          npc.x = CANVAS_WIDTH + 100;
-        } else {
-          openBookView();
-        }
+    // Check tap on Book (only after customer's first dialogue)
+    else if (currentCustomerState >= CustomerState.LOOKUP && mouseCanvasX >= 900 && mouseCanvasX <= 1100 && mouseCanvasY >= 450 && mouseCanvasY <= 580) {
+      const dist = Math.hypot((player.x + player.renderWidth / 2) - 998, (player.y + player.renderHeight / 2) - 496);
+      if (dist < 380) {
+        openBookView();
       }
     }
   }
@@ -300,15 +301,15 @@ canvas.addEventListener('touchstart', (e) => {
       }
     }
   }
-  
+
   if (currentState === GameState.WORKTABLE) {
     // Check Close Button
     if (mouseCanvasX >= 1740 && mouseCanvasX <= 1860 && mouseCanvasY >= 50 && mouseCanvasY <= 110) {
       exitWorktableView();
       return;
     }
-    // Mortar & Pestle
-    if (mouseCanvasX >= 560 && mouseCanvasX <= 800 && mouseCanvasY >= 390 && mouseCanvasY <= 630) {
+    // Mortar & Pestle bounding box: X [290, 870], Y [330, 630]
+    if (mouseCanvasX >= 290 && mouseCanvasX <= 870 && mouseCanvasY >= 330 && mouseCanvasY <= 630) {
       if (mortarState === 'FULL') {
         mortarState = 'MIXING';
         mortarMixingTime = 0;
@@ -321,25 +322,25 @@ canvas.addEventListener('touchstart', (e) => {
         return;
       }
     }
-    // Copper Bowl
-    if (mouseCanvasX >= 1050 && mouseCanvasX <= 1430 && mouseCanvasY >= 330 && mouseCanvasY <= 630) {
+    // Copper Bowl bounding box: X [930, 1590], Y [310, 650]
+    if (mouseCanvasX >= 930 && mouseCanvasX <= 1590 && mouseCanvasY >= 310 && mouseCanvasY <= 650) {
       if (copperBowlState === 'FULL') {
         if (inventory.length < 10) {
           inventory.push("Willow Bark Mixture");
-          copperBowlState = 'EMPTY';
-          
+          copperBowlState = 'COLLECTED';
+
           const slotIndex = inventory.length - 1;
           const slotX = 488 + slotIndex * (slotSize + slotSpacing);
           const slotY = 940;
           activeAnimations.push({
             type: 'collect_slide',
             itemName: 'Willow Bark Mixture',
-            startX: 1240,
-            startY: 500,
-            x: 1240,
-            y: 500,
-            endX: slotX + slotSize/2,
-            endY: slotY + slotSize/2,
+            startX: 1260,
+            startY: 480,
+            x: 1260,
+            y: 480,
+            endX: slotX + slotSize / 2,
+            endY: slotY + slotSize / 2,
             progress: 0,
             duration: 0.6
           });
@@ -353,7 +354,7 @@ canvas.addEventListener('touchstart', (e) => {
       exitCabinetView();
       return;
     }
-    
+
     // Check touch on jars
     updateHoveredJar();
     if (hoveredJarIndex !== null) {
@@ -366,7 +367,7 @@ canvas.addEventListener('touchstart', (e) => {
     }
     // Check tap on Stove (x: [300, 420], y: [410, 476])
     if (mouseCanvasX >= 300 && mouseCanvasX <= 420 && mouseCanvasY >= 410 && mouseCanvasY <= 476) {
-      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 360, 2) + Math.pow((player.y + player.renderHeight/2) - 443, 2));
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth / 2) - 360, 2) + Math.pow((player.y + player.renderHeight / 2) - 443, 2));
       const hasMixture = inventory.includes("Willow Bark Mixture");
       const hasBottle = inventory.some(name => bottles.some(b => b.name === name));
       if (dist < 250 && (currentCustomerState === CustomerState.STEPS || currentCustomerState === CustomerState.CRAFTING) && hasMixture && hasBottle && !inventory.includes("Willow Bark Decoction")) {
@@ -377,7 +378,7 @@ canvas.addEventListener('touchstart', (e) => {
     }
     // Check tap on Barrel (x: [670, 830], y: [383, 543])
     else if (mouseCanvasX >= 670 && mouseCanvasX <= 830 && mouseCanvasY >= 383 && mouseCanvasY <= 543) {
-      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 750, 2) + Math.pow((player.y + player.renderHeight/2) - 463, 2));
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth / 2) - 750, 2) + Math.pow((player.y + player.renderHeight / 2) - 463, 2));
       if (dist < 250 && !inventory.includes('Water')) {
         activeHoldBarrel = true;
         holdTime = 0;
@@ -385,7 +386,7 @@ canvas.addEventListener('touchstart', (e) => {
     }
     // Check tap on Main Cabinet
     else if (mouseCanvasX >= 850 && mouseCanvasX <= 1070 && mouseCanvasY >= 100 && mouseCanvasY <= 543) {
-      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 960, 2) + Math.pow((player.y + player.renderHeight/2) - 500, 2));
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth / 2) - 960, 2) + Math.pow((player.y + player.renderHeight / 2) - 500, 2));
       if (dist < 250) {
         activeCabinet = 'INGREDIENT';
         openCabinetView();
@@ -393,7 +394,7 @@ canvas.addEventListener('touchstart', (e) => {
     }
     // Check tap on Second Cabinet (Bottle Cabinet)
     else if (mouseCanvasX >= 1460 && mouseCanvasX <= 1580 && mouseCanvasY >= 290 && mouseCanvasY <= 470) {
-      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 1520, 2) + Math.pow((player.y + player.renderHeight/2) - 440, 2));
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth / 2) - 1520, 2) + Math.pow((player.y + player.renderHeight / 2) - 440, 2));
       if (dist < 250) {
         activeCabinet = 'BOTTLE';
         openCabinetView();
@@ -401,7 +402,7 @@ canvas.addEventListener('touchstart', (e) => {
     }
   } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.WORKROOM) {
     if (mouseCanvasX >= 830 && mouseCanvasX <= 1090 && mouseCanvasY >= 700 && mouseCanvasY <= 840) {
-      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 960, 2) + Math.pow((player.y + player.renderHeight) - 770, 2));
+      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth / 2) - 960, 2) + Math.pow((player.y + player.renderHeight) - 770, 2));
       if (dist < 250) {
         openWorktableView();
         return;
@@ -410,14 +411,14 @@ canvas.addEventListener('touchstart', (e) => {
   } else if (currentState === GameState.GAMEPLAY && currentRoom === RoomState.SHOP) {
     // Check tap on NPC
     if (npc.active && npc.reachedCounter && mouseCanvasX >= npc.x && mouseCanvasX <= npc.x + npc.renderWidth && mouseCanvasY >= npc.y && mouseCanvasY <= npc.y + npc.renderHeight) {
-      const xDist = Math.abs((player.x + player.renderWidth/2) - (npc.x + npc.renderWidth/2));
-      const yDist = Math.abs((player.y + player.renderHeight/2) - (npc.y + npc.renderHeight/2));
+      const xDist = Math.abs((player.x + player.renderWidth / 2) - (npc.x + npc.renderWidth / 2));
+      const yDist = Math.abs((player.y + player.renderHeight / 2) - (npc.y + npc.renderHeight / 2));
       if (xDist < 350 && yDist < 420) {
         if (currentCustomerState === CustomerState.DELIVERY) {
-          activeDialogueString = "Ah, thank you! The pain is fading already. Here's your payment!";
-          startDialogue();
+          startDialogue("Thank you! This works like magic");
           const remedyIndex = inventory.indexOf("Willow Bark Decoction");
           if (remedyIndex > -1) inventory.splice(remedyIndex, 1);
+          playMoneySound();
           updateCoins(100);
           npc.reachedCounter = false;
           npc.targetX = CANVAS_WIDTH + 200;
@@ -430,20 +431,11 @@ canvas.addEventListener('touchstart', (e) => {
         }
       }
     }
-    // Check tap on Book
-    else if (mouseCanvasX >= 950 && mouseCanvasX <= 1046 && mouseCanvasY >= 496 && mouseCanvasY <= 520) {
-      const dist = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 998, 2) + Math.pow((player.y + player.renderHeight/2) - 496, 2));
-      if (dist < 250) {
-        if (currentCustomerState === CustomerState.IDLE) {
-          isShopOpen = true;
-          currentCustomerState = CustomerState.ARRIVAL;
-          updateObjective();
-          npc.active = true;
-          npc.reachedCounter = false;
-          npc.x = CANVAS_WIDTH + 100;
-        } else {
-          openBookView();
-        }
+    // Check tap on Book (only after customer's first dialogue)
+    else if (currentCustomerState >= CustomerState.LOOKUP && mouseCanvasX >= 900 && mouseCanvasX <= 1100 && mouseCanvasY >= 450 && mouseCanvasY <= 580) {
+      const dist = Math.hypot((player.x + player.renderWidth / 2) - 998, (player.y + player.renderHeight / 2) - 496);
+      if (dist < 380) {
+        openBookView();
       }
     }
   }
@@ -454,7 +446,7 @@ canvas.addEventListener('mouseup', () => {
   if (draggedItemIndex !== null) {
     if (currentState === GameState.WORKTABLE) {
       // Check if dropped onto Mortar & Pestle
-      if (mouseCanvasX >= 550 && mouseCanvasX <= 810 && mouseCanvasY >= 380 && mouseCanvasY <= 640) {
+      if (mouseCanvasX >= 280 && mouseCanvasX <= 880 && mouseCanvasY >= 320 && mouseCanvasY <= 640) {
         const itemName = inventory[draggedItemIndex];
         if ((itemName === "Willow Bark" || itemName === "Water") && !mortarIngredients.includes(itemName) && (mortarState === 'EMPTY' || mortarState === 'HALF')) {
           mortarIngredients.push(itemName);
@@ -474,17 +466,17 @@ canvas.addEventListener('mouseup', () => {
     }
     draggedItemIndex = null;
   }
-  
+
   if (isDraggingFromMortar) {
     // Check if dropped onto Copper Bowl
-    if (mouseCanvasX >= 1040 && mouseCanvasX <= 1440 && mouseCanvasY >= 320 && mouseCanvasY <= 640) {
+    if (mouseCanvasX >= 920 && mouseCanvasX <= 1600 && mouseCanvasY >= 300 && mouseCanvasY <= 660) {
       mortarState = 'EMPTY';
       mortarIngredients = [];
       copperBowlState = 'FULL';
     }
     isDraggingFromMortar = false;
   }
-  
+
   if (activeHoldJarIndex !== null && !keys.e) {
     activeHoldJarIndex = null;
     holdTime = 0;
@@ -505,7 +497,7 @@ canvas.addEventListener('touchend', () => {
   if (draggedItemIndex !== null) {
     if (currentState === GameState.WORKTABLE) {
       // Check if dropped onto Mortar & Pestle
-      if (mouseCanvasX >= 550 && mouseCanvasX <= 810 && mouseCanvasY >= 380 && mouseCanvasY <= 640) {
+      if (mouseCanvasX >= 280 && mouseCanvasX <= 880 && mouseCanvasY >= 320 && mouseCanvasY <= 640) {
         const itemName = inventory[draggedItemIndex];
         if ((itemName === "Willow Bark" || itemName === "Water") && !mortarIngredients.includes(itemName) && (mortarState === 'EMPTY' || mortarState === 'HALF')) {
           mortarIngredients.push(itemName);
@@ -525,17 +517,17 @@ canvas.addEventListener('touchend', () => {
     }
     draggedItemIndex = null;
   }
-  
+
   if (isDraggingFromMortar) {
     // Check if dropped onto Copper Bowl
-    if (mouseCanvasX >= 1040 && mouseCanvasX <= 1440 && mouseCanvasY >= 320 && mouseCanvasY <= 640) {
+    if (mouseCanvasX >= 920 && mouseCanvasX <= 1600 && mouseCanvasY >= 300 && mouseCanvasY <= 660) {
       mortarState = 'EMPTY';
       mortarIngredients = [];
       copperBowlState = 'FULL';
     }
     isDraggingFromMortar = false;
   }
-  
+
   if (activeHoldJarIndex !== null && !keys.e) {
     activeHoldJarIndex = null;
     holdTime = 0;
@@ -570,7 +562,7 @@ const playerColorMap = {
 const playerSprite = [
   ".....kkkkkk.....",
   "...kkhhhhhhkk...",
-  "..khhhhhhhhHhk..", 
+  "..khhhhhhhhHhk..",
   ".khhhhhhhhhhhhHk.",
   ".khhhkkhhhkkhhhk.",
   ".khhkSShkSShkHhk.",
@@ -598,9 +590,9 @@ const playerSprite = [
 const npcColorMap = {
   'k': '#4A3B32',
   'h': '#4a4a4a', // Grey hair
-  'H': '#7a7a7a', 
+  'H': '#7a7a7a',
   's': '#f2d5c4', // Skin
-  'S': '#d6b39a', 
+  'S': '#d6b39a',
   'g': '#3d5a80', // Blue vest
   'r': '#98c1d9', // Light blue shirt
   'p': '#293241', // Dark pants
@@ -812,11 +804,11 @@ const ingredients = [
   { name: 'Willow Bark', category: 'Roots & Barks', color: '#7a5a40', highlight: '#9c795d', shadow: '#583f2a', lid: '#422c1b', lidHighlight: '#5e412a' },
   { name: 'Ginger', category: 'Roots & Barks', color: '#dfc08f', highlight: '#f1dab5', shadow: '#bf9e6f', lid: '#8c6239', lidHighlight: '#a3764b' },
   { name: 'Tulsi', category: 'Roots & Barks', color: '#4d754b', highlight: '#6ca369', shadow: '#31522f', lid: '#223821', lidHighlight: '#335431' },
-  
+
   { name: 'Fats', category: 'Binders & Bases', color: '#e8e2d5', highlight: '#ffffff', shadow: '#ccc4b4', lid: '#a39788', lidHighlight: '#c2b6a7' },
   { name: 'Beeswax', category: 'Binders & Bases', color: '#ebb434', highlight: '#ffda73', shadow: '#bf8e1b', lid: '#8c6239', lidHighlight: '#a3764b' },
   { name: 'Herbal Extract', category: 'Binders & Bases', color: '#276965', highlight: '#439b97', shadow: '#124542', lid: '#0e2b29', lidHighlight: '#194a47' },
-  
+
   { name: 'Jaggery', category: 'Sweeteners & Flavorings', color: '#784420', highlight: '#995f38', shadow: '#572d11', lid: '#381b07', lidHighlight: '#522b10' },
   { name: 'Black Pepper', category: 'Sweeteners & Flavorings', color: '#333333', highlight: '#555555', shadow: '#1a1a1a', lid: '#473d35', lidHighlight: '#61544a' },
   { name: 'Honey', category: 'Sweeteners & Flavorings', color: '#d99011', highlight: '#ffbc42', shadow: '#a36603', lid: '#8c6239', lidHighlight: '#a3764b', isGlass: true },
@@ -828,11 +820,11 @@ const bottles = [
   { name: 'Clear Vial', shape: 'vial', category: 'Clear Bottles', color: '#e0f7fa', highlight: '#ffffff', shadow: '#b2ebf2', lid: '#8a5a36', lidHighlight: '#a87a56', isGlass: true },
   { name: 'Clear Flask', shape: 'flask', category: 'Clear Bottles', color: '#e0f7fa', highlight: '#ffffff', shadow: '#b2ebf2', lid: '#8a5a36', lidHighlight: '#a87a56', isGlass: true },
   { name: 'Clear Jar', shape: 'jar', category: 'Clear Bottles', color: '#e0f7fa', highlight: '#ffffff', shadow: '#b2ebf2', lid: '#8a5a36', lidHighlight: '#a87a56', isGlass: true },
-  
+
   { name: 'Blue Vial', shape: 'vial', category: 'Cobalt Blue Bottles', color: '#4ba3e3', highlight: '#8ac4ff', shadow: '#1c6ca3', lid: '#8a5a36', lidHighlight: '#a87a56', isGlass: true },
   { name: 'Blue Flask', shape: 'flask', category: 'Cobalt Blue Bottles', color: '#4ba3e3', highlight: '#8ac4ff', shadow: '#1c6ca3', lid: '#8a5a36', lidHighlight: '#a87a56', isGlass: true },
   { name: 'Blue Jar', shape: 'jar', category: 'Cobalt Blue Bottles', color: '#4ba3e3', highlight: '#8ac4ff', shadow: '#1c6ca3', lid: '#8a5a36', lidHighlight: '#a87a56', isGlass: true },
-  
+
   { name: 'Amber Vial', shape: 'vial', category: 'Amber Bottles', color: '#d99011', highlight: '#ffbc42', shadow: '#a36603', lid: '#8a5a36', lidHighlight: '#a87a56', isGlass: true },
   { name: 'Amber Flask', shape: 'flask', category: 'Amber Bottles', color: '#d99011', highlight: '#ffbc42', shadow: '#a36603', lid: '#8a5a36', lidHighlight: '#a87a56', isGlass: true },
   { name: 'Amber Jar', shape: 'jar', category: 'Amber Bottles', color: '#d99011', highlight: '#ffbc42', shadow: '#a36603', lid: '#8a5a36', lidHighlight: '#a87a56', isGlass: true }
@@ -1051,13 +1043,13 @@ function checkCollision(x, y, width, height) {
     const pRight = x + width - 24;
     const pBottom = y + height;
     const pFeetY = y + height - 20; // check collision at bottom of player (feet box)
-    
+
     // Boundaries (entire screen 1920x1080)
     if (pLeft < -40) return true; // Let them walk off to the left back to shop
     if (pRight > CANVAS_WIDTH - 20) return true;
     if (pFeetY < 500) return true; // Wall border seam at Y = 500
     if (pBottom > 1060) return true; // Bottom border near bottom of screen
-    
+
     // Furniture obstacle bounding boxes in full-screen Workroom
     const obstacles = [
       { x: 300, y: 410, w: 120, h: 66 },   // Stove
@@ -1067,7 +1059,7 @@ function checkCollision(x, y, width, height) {
       { x: 1590, y: 440, w: 120, h: 30 },  // Potted Plant
       { x: 830, y: 720, w: 260, h: 128 }   // Worktable (shifted down 100px)
     ];
-    
+
     for (const obs of obstacles) {
       if (
         pRight > obs.x &&
@@ -1087,15 +1079,15 @@ function getCanvasMousePos(e) {
   const rect = canvas.getBoundingClientRect();
   const scaleX = CANVAS_WIDTH / rect.width;
   const scaleY = CANVAS_HEIGHT / rect.height;
-  
+
   let clientX = e.clientX;
   let clientY = e.clientY;
-  
+
   if (e.touches && e.touches.length > 0) {
     clientX = e.touches[0].clientX;
     clientY = e.touches[0].clientY;
   }
-  
+
   return {
     x: (clientX - rect.left) * scaleX,
     y: (clientY - rect.top) * scaleY
@@ -1108,24 +1100,24 @@ function updateHoveredJar() {
     hoveredJarIndex = null;
     return;
   }
-  
+
   const rowY = [250, 510, 770];
   const colX = [480, 960, 1440];
-  
+
   const boxW = 180;
   const boxH = 200;
-  
+
   for (let r = 0; r < 3; r++) {
     for (let c = 0; c < 3; c++) {
       const idx = r * 3 + c;
       const jX = colX[c];
       const jY = rowY[r];
-      
+
       if (
-        mouseCanvasX >= jX - boxW/2 &&
-        mouseCanvasX <= jX + boxW/2 &&
-        mouseCanvasY >= jY - boxH/2 &&
-        mouseCanvasY <= jY + boxH/2
+        mouseCanvasX >= jX - boxW / 2 &&
+        mouseCanvasX <= jX + boxW / 2 &&
+        mouseCanvasY >= jY - boxH / 2 &&
+        mouseCanvasY <= jY + boxH / 2
       ) {
         hoveredJarIndex = idx;
         return;
@@ -1164,7 +1156,7 @@ function drawCabinetJar(ctx, ing, x, y, scale) {
     'l': '#F5F2EB', // parchment label
     'g': ing.isGlass ? 'rgba(255, 255, 255, 0.4)' : ing.color // glass shine if honey
   };
-  
+
   let sprite = [
     "....kkkkkk....",
     "...kOOOOOOk...",
@@ -1181,7 +1173,7 @@ function drawCabinetJar(ctx, ing, x, y, scale) {
     "kcccccccccccks",
     ".kkkkkkkkkkkk."
   ];
-  
+
   if (ing.shape === 'vial') {
     sprite = vialSprite;
   } else if (ing.shape === 'flask') {
@@ -1189,12 +1181,12 @@ function drawCabinetJar(ctx, ing, x, y, scale) {
   } else if (ing.shape === 'jar') {
     sprite = jarShapeSprite;
   }
-  
+
   const width = sprite[0].length * scale;
   const height = sprite.length * scale;
   const startX = x - width / 2;
   const startY = y - height / 2;
-  
+
   for (let r = 0; r < sprite.length; r++) {
     for (let c = 0; c < sprite[r].length; c++) {
       const char = sprite[r][c];
@@ -1205,7 +1197,7 @@ function drawCabinetJar(ctx, ing, x, y, scale) {
       }
     }
   }
-  
+
   if (ing.isGlass) {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.fillRect(startX + 3 * scale, startY + 4 * scale, scale, 6 * scale);
@@ -1345,17 +1337,23 @@ copperBowlFullImage.src = 'copper_bowl_full.png';
 let mortarIngredients = [];
 let mortarState = 'EMPTY'; // 'EMPTY', 'HALF', 'FULL', 'MIXING', 'MIXED'
 let mortarMixingTime = 0;
-let copperBowlState = 'EMPTY'; // 'EMPTY', 'FULL'
+let copperBowlState = 'EMPTY'; // 'EMPTY', 'FULL', 'COLLECTED'
 let isDraggingFromMortar = false;
 
 function openWorktableView() {
   currentState = GameState.WORKTABLE;
   interactionPrompt.classList.add('hidden');
+  if (copperBowlState === 'COLLECTED') {
+    copperBowlState = 'EMPTY';
+  }
 }
 
 function exitWorktableView() {
   currentState = GameState.GAMEPLAY;
   isDraggingFromMortar = false;
+  if (copperBowlState === 'COLLECTED') {
+    copperBowlState = 'EMPTY';
+  }
 }
 
 // Generate randomized and equally distributed flask array (13 slots total)
@@ -1377,6 +1375,9 @@ const pixelScale = 8;
 const player = {
   x: CANVAS_WIDTH / 2 - (playerSprite[0].length * pixelScale) / 2,
   y: 350, // Starts behind the counter
+  baseY: 350,
+  vy: 0,
+  jumpOffset: 0,
   renderWidth: playerSprite[0].length * pixelScale,
   renderHeight: playerSprite.length * pixelScale
 };
@@ -1384,7 +1385,7 @@ const player = {
 const npc = {
   x: CANVAS_WIDTH + 100,
   y: 700, // Starts in front of the counter
-  targetX: CANVAS_WIDTH / 2 + 250,
+  targetX: CANVAS_WIDTH / 2 - (playerSprite[0].length * pixelScale) / 2, // Centered in front of apothecary
   renderWidth: playerSprite[0].length * pixelScale,
   renderHeight: playerSprite.length * pixelScale,
   active: false,
@@ -1408,13 +1409,67 @@ const lightSources = [
   { type: 'candle', x: 1300 + 28, y: counterY - 88 + 20, radius: 50 }
 ];
 
-// Coins & Currency
+// Coins & Currency with Simulator-style Satisfying Animation
 let coins = 150;
-function updateCoins(amount) {
+let displayedCoins = 150;
+let coinCountUpAnim = null;
+
+function updateCoins(amount, animate = true) {
+  const startCoins = coins;
   coins += amount;
-  const element = document.getElementById('coin-text');
-  if (element) {
-    element.textContent = `🪙 ${coins}`;
+  const targetCoins = coins;
+
+  const panel = document.querySelector('.coin-panel');
+  const coinElement = document.getElementById('coin-text');
+
+  if (animate && panel && coinElement) {
+    // 1. Box Jump animation
+    panel.classList.remove('coin-jump');
+    void panel.offsetWidth; // force reflow
+    panel.classList.add('coin-jump');
+
+    // 2. Color Flash
+    coinElement.classList.add('coin-flash');
+
+    // 3. Floating +100 text (lasts for ~4s)
+    const floatEl = document.createElement('div');
+    floatEl.className = 'coin-float-text';
+    floatEl.textContent = `+${amount}`;
+    panel.appendChild(floatEl);
+    setTimeout(() => {
+      if (floatEl.parentNode) floatEl.parentNode.removeChild(floatEl);
+    }, 4200);
+
+    // 4. Count-up animation paced over 4.0 seconds (4000ms)
+    const startTime = performance.now();
+    const duration = 4000;
+
+    if (coinCountUpAnim) cancelAnimationFrame(coinCountUpAnim);
+
+    function stepCountUp(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Paced ease progression across the 4 seconds
+      const eased = progress < 0.85
+        ? (progress / 0.85) * 0.9
+        : 0.9 + ((progress - 0.85) / 0.15) * 0.1;
+      displayedCoins = Math.round(startCoins + (targetCoins - startCoins) * Math.min(1, Math.max(0, eased)));
+      coinElement.textContent = `🪙 ${displayedCoins}`;
+
+      if (progress < 1) {
+        coinCountUpAnim = requestAnimationFrame(stepCountUp);
+      } else {
+        displayedCoins = targetCoins;
+        coinElement.textContent = `🪙 ${displayedCoins}`;
+        coinElement.classList.remove('coin-flash');
+        coinCountUpAnim = null;
+      }
+    }
+
+    coinCountUpAnim = requestAnimationFrame(stepCountUp);
+  } else if (coinElement) {
+    displayedCoins = targetCoins;
+    coinElement.textContent = `🪙 ${displayedCoins}`;
   }
 }
 
@@ -1429,10 +1484,10 @@ const CustomerState = {
   DELIVERY: 6     // STATE 6
 };
 
-let currentCustomerState = CustomerState.IDLE;
+let currentCustomerState = CustomerState.ARRIVAL;
 let activeAilmentType = null;
 let hasOpenedBookInStepsState = false;
-let isShopOpen = false;
+let isShopOpen = true;
 
 const ailmentToRecipePage = {
   'PAIN': 1,
@@ -1451,36 +1506,57 @@ const customerData = {
 let activeCustomerNum = 1;
 let activeDialogueString = "Hello!";
 
-// Audio context and talk noise blip generator
+// Audio context, blip sound, and money click audio
 let audioCtx = null;
+function getAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
 function playBlipSound(char) {
   try {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    
+    const ctx = getAudioContext();
+    const osc = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
     osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    
+    gainNode.connect(ctx.destination);
+
     osc.type = 'triangle';
-    
+
     const charCode = char.charCodeAt(0);
     const pitchOffset = (charCode % 8) * 12;
-    osc.frequency.setValueAtTime(140 + pitchOffset, audioCtx.currentTime);
-    
-    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.07);
-    
+    osc.frequency.setValueAtTime(140 + pitchOffset, ctx.currentTime);
+
+    gainNode.gain.setValueAtTime(0, ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
+
     osc.start();
-    osc.stop(audioCtx.currentTime + 0.075);
+    osc.stop(ctx.currentTime + 0.075);
   } catch (e) {
     console.error('Audio error:', e);
+  }
+}
+
+const moneyAudio = new Audio('/assets/money.mp3');
+
+function playMoneySound() {
+  try {
+    moneyAudio.currentTime = 0;
+    const playPromise = moneyAudio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((e) => {
+        console.warn('Audio playback prevented or file empty:', e);
+      });
+    }
+  } catch (e) {
+    console.error('Money sound error:', e);
   }
 }
 
@@ -1488,12 +1564,12 @@ function playBlipSound(char) {
 function updateObjective() {
   const element = document.getElementById('objective-text');
   if (!element) return;
-  
+
   let text = "";
   switch (currentCustomerState) {
     case CustomerState.IDLE:
     case CustomerState.ARRIVAL:
-      text = "Objective: Open Shop";
+      text = "Objective: Attend to the customer";
       break;
     case CustomerState.LOOKUP:
       if (activeAilmentType === 'PAIN') {
@@ -1550,10 +1626,10 @@ startBtn.addEventListener('click', () => {
   mainMenu.classList.remove('active');
   mainMenu.classList.add('hidden');
   exteriorBg.classList.add('zoom-in');
-  
+
   // Focus the window to ensure immediate WASD control
   window.focus();
-  
+
   setTimeout(() => {
     exteriorBg.classList.remove('active');
     interiorBg.classList.add('active');
@@ -1561,7 +1637,12 @@ startBtn.addEventListener('click', () => {
       exteriorBg.classList.add('hidden');
       hud.classList.remove('hidden');
       currentState = GameState.GAMEPLAY;
-      currentCustomerState = CustomerState.IDLE;
+      isShopOpen = true;
+      currentCustomerState = CustomerState.ARRIVAL;
+      npc.active = true;
+      npc.reachedCounter = false;
+      npc.x = CANVAS_WIDTH + 100;
+      npc.targetX = CANVAS_WIDTH / 2 - npc.renderWidth / 2;
       updateObjective();
     }, 500);
   }, 500);
@@ -1575,6 +1656,7 @@ function gameLoop(timestamp) {
   update(dt);
   draw();
   keysPressed.e = false;
+  keysPressed.space = false;
   requestAnimationFrame(gameLoop);
 }
 
@@ -1587,13 +1669,19 @@ function update(dt) {
         transitionAlpha = 1;
         transitionDirection = -1;
         currentRoom = nextRoom;
-        
+
         // Relocate player near the entrance of the target room
         if (currentRoom === RoomState.WORKROOM) {
           player.x = 25; // Far left edge of full screen
+          player.baseY = 520;
+          player.jumpOffset = 0;
+          player.vy = 0;
           player.y = 520;
         } else {
           player.x = CANVAS_WIDTH - player.renderWidth - 25; // Far right edge behind counter
+          player.baseY = 350;
+          player.jumpOffset = 0;
+          player.vy = 0;
           player.y = 350;
         }
       }
@@ -1625,44 +1713,103 @@ function update(dt) {
   }
 
   if (currentState === GameState.GAMEPLAY) {
-    let dx = 0; let dy = 0;
-    if (keys.w) dy -= 1;
-    if (keys.s) dy += 1;
-    if (keys.a) dx -= 1;
-    if (keys.d) dx += 1;
-    
-    if (dx !== 0 && dy !== 0) {
-      const length = Math.sqrt(dx * dx + dy * dy);
-      dx /= length; dy /= length;
-    }
+    if (currentRoom === RoomState.SHOP) {
+      player.baseY = 350;
 
-    if (dx !== 0 || dy !== 0) {
-      if (Math.abs(dy) >= Math.abs(dx)) {
-        if (dy > 0) playerDirection = 'down';
-        else if (dy < 0) playerDirection = 'up';
-      } else {
-        if (dx > 0) playerDirection = 'right';
-        else if (dx < 0) playerDirection = 'left';
+      // Apothecary sprite can only walk on ground horizontally (A / D or Left / Right) behind counter
+      let dx = 0;
+      if (keys.a) { dx -= 1; playerDirection = 'left'; }
+      if (keys.d) { dx += 1; playerDirection = 'right'; }
+      if (keys.s) { playerDirection = 'down'; } // Pressing S lets apothecary face forward
+      if (keys.w) { playerDirection = 'up'; }   // Pressing W lets apothecary face backward
+
+      // Axis-aligned horizontal movement on ground
+      let targetX = player.x + dx * PLAYER_SPEED * dt;
+      targetX = Math.max(20, targetX);
+
+      let oldX = player.x;
+      player.x = targetX;
+      if (checkCollision(player.x, player.baseY, player.renderWidth, player.renderHeight)) {
+        player.x = oldX;
       }
+
+      // Jump physics on pressing Space key (in shop)
+      if ((keysPressed.space || keys.space) && player.jumpOffset === 0) {
+        player.vy = -750;
+      }
+
+      if (player.jumpOffset < 0 || player.vy !== 0) {
+        const gravity = 2200;
+        player.vy += gravity * dt;
+        player.jumpOffset += player.vy * dt;
+        if (player.jumpOffset >= 0) {
+          player.jumpOffset = 0;
+          player.vy = 0;
+        }
+      }
+
+      player.y = player.baseY + player.jumpOffset;
+    } else if (currentRoom === RoomState.WORKROOM) {
+      // Free 2D movement in the Working Room
+      let dx = 0; let dy = 0;
+      if (keys.w) dy -= 1;
+      if (keys.s) dy += 1;
+      if (keys.a) dx -= 1;
+      if (keys.d) dx += 1;
+
+      if (dx !== 0 && dy !== 0) {
+        const length = Math.sqrt(dx * dx + dy * dy);
+        dx /= length; dy /= length;
+      }
+
+      if (dx !== 0 || dy !== 0) {
+        if (Math.abs(dy) >= Math.abs(dx)) {
+          if (dy > 0) playerDirection = 'down';
+          else if (dy < 0) playerDirection = 'up';
+        } else {
+          if (dx > 0) playerDirection = 'right';
+          else if (dx < 0) playerDirection = 'left';
+        }
+      }
+
+      // Smooth slide movement in 2D with collision
+      let targetX = player.x + dx * PLAYER_SPEED * dt;
+      let targetY = player.baseY + dy * PLAYER_SPEED * dt;
+
+      // Keep inside screen bounds
+      targetX = Math.max(0, Math.min(CANVAS_WIDTH - player.renderWidth, targetX));
+      targetY = Math.max(320, Math.min(CANVAS_HEIGHT - player.renderHeight - 20, targetY));
+
+      let oldX = player.x;
+      player.x = targetX;
+      if (checkCollision(player.x, player.baseY, player.renderWidth, player.renderHeight)) {
+        player.x = oldX;
+      }
+
+      let oldY = player.baseY;
+      player.baseY = targetY;
+      if (checkCollision(player.x, player.baseY, player.renderWidth, player.renderHeight)) {
+        player.baseY = oldY;
+      }
+
+      // Jump physics with Space key (in workroom)
+      if ((keysPressed.space || keys.space) && player.jumpOffset === 0) {
+        player.vy = -750;
+      }
+
+      if (player.jumpOffset < 0 || player.vy !== 0) {
+        const gravity = 2200;
+        player.vy += gravity * dt;
+        player.jumpOffset += player.vy * dt;
+        if (player.jumpOffset >= 0) {
+          player.jumpOffset = 0;
+          player.vy = 0;
+        }
+      }
+
+      player.y = player.baseY + player.jumpOffset;
     }
 
-    
-    // Axis-aligned slide movement
-    let targetX = player.x + dx * PLAYER_SPEED * dt;
-    let targetY = player.y + dy * PLAYER_SPEED * dt;
-    
-    let oldX = player.x;
-    player.x = targetX;
-    if (checkCollision(player.x, player.y, player.renderWidth, player.renderHeight)) {
-      player.x = oldX;
-    }
-    
-    let oldY = player.y;
-    player.y = targetY;
-    if (checkCollision(player.x, player.y, player.renderWidth, player.renderHeight)) {
-      player.y = oldY;
-    }
-    
     // Room transition checks
     if (currentRoom === RoomState.SHOP) {
       if (player.x + player.renderWidth >= CANVAS_WIDTH - 5) {
@@ -1677,7 +1824,7 @@ function update(dt) {
         transitionAlpha = 0;
       }
     }
-    
+
     // NPC & Book updates (only in Shop)
     if (currentRoom === RoomState.SHOP) {
       if (npc.active && !npc.reachedCounter) {
@@ -1691,20 +1838,23 @@ function update(dt) {
           }
         }
       }
-      
+
       const bookCenterX = 998;
       const bookCenterY = 496;
-      const isNearBook = Math.abs((player.x + player.renderWidth/2) - bookCenterX) < 100 && (player.y >= 320);
-      
+      const isNearBook = Math.abs((player.x + player.renderWidth / 2) - bookCenterX) < 320 && (player.baseY >= 280);
+
       let showNPCPrompt = false;
-      if (npc.reachedCounter) {
-        const xDist = Math.abs((player.x + player.renderWidth/2) - (npc.x + npc.renderWidth/2));
-        const yDist = Math.abs((player.y + player.renderHeight/2) - (npc.y + npc.renderHeight/2));
+      const showNPCDelivery = (currentCustomerState === CustomerState.DELIVERY);
+      const showNPCTalk = (currentCustomerState === CustomerState.ARRIVAL);
+
+      if (npc.reachedCounter && (showNPCDelivery || showNPCTalk)) {
+        const xDist = Math.abs((player.x + player.renderWidth / 2) - (npc.x + npc.renderWidth / 2));
+        const yDist = Math.abs((player.baseY + player.renderHeight / 2) - (npc.y + npc.renderHeight / 2));
         if (xDist < 350 && yDist < 420) {
           showNPCPrompt = true;
         }
       }
-      
+
       if (showNPCPrompt) {
         interactionPrompt.classList.remove('hidden');
         if (currentCustomerState === CustomerState.DELIVERY) {
@@ -1715,15 +1865,15 @@ function update(dt) {
         const containerRect = document.getElementById('game-container').getBoundingClientRect();
         const scaleX = containerRect.width / CANVAS_WIDTH;
         const scaleY = containerRect.height / CANVAS_HEIGHT;
-        interactionPrompt.style.left = `${(npc.x + npc.renderWidth/2) * scaleX}px`;
+        interactionPrompt.style.left = `${(npc.x + npc.renderWidth / 2) * scaleX}px`;
         interactionPrompt.style.top = `${(npc.y) * scaleY}px`;
-        
+
         if (keysPressed.e) {
           if (currentCustomerState === CustomerState.DELIVERY) {
-            activeDialogueString = "Ah, thank you! The pain is fading already. Here's your payment!";
-            startDialogue();
+            startDialogue("Thank you! This works like magic");
             const remedyIndex = inventory.indexOf("Willow Bark Decoction");
             if (remedyIndex > -1) inventory.splice(remedyIndex, 1);
+            playMoneySound();
             updateCoins(100);
             npc.reachedCounter = false;
             npc.targetX = CANVAS_WIDTH + 200;
@@ -1736,36 +1886,23 @@ function update(dt) {
           }
         }
       }
-      else if (isNearBook) {
+      else if (isNearBook && currentCustomerState >= CustomerState.LOOKUP) {
         interactionPrompt.classList.remove('hidden');
-        if (currentCustomerState === CustomerState.IDLE) {
-          interactionPrompt.textContent = "Press E / Tap to Open Shop";
-        } else {
-          interactionPrompt.textContent = "Press E / Tap to Read Book";
-        }
+        interactionPrompt.textContent = "Press E / Tap to Read Book";
         const containerRect = document.getElementById('game-container').getBoundingClientRect();
         const scaleX = containerRect.width / CANVAS_WIDTH;
         const scaleY = containerRect.height / CANVAS_HEIGHT;
         interactionPrompt.style.left = `${bookCenterX * scaleX}px`;
         interactionPrompt.style.top = `${400 * scaleY}px`;
-        
+
         if (keysPressed.e) {
-          if (currentCustomerState === CustomerState.IDLE) {
-            isShopOpen = true;
-            currentCustomerState = CustomerState.ARRIVAL;
-            updateObjective();
-            npc.active = true;
-            npc.reachedCounter = false;
-            npc.x = CANVAS_WIDTH + 100;
-          } else {
-            openBookView();
-          }
+          openBookView();
         }
       } else {
         interactionPrompt.classList.add('hidden');
       }
     }
-    
+
     // Cabinet proximity & interaction (only in Workroom)
     if (currentRoom === RoomState.WORKROOM) {
       const mainCenterX = 960;
@@ -1774,15 +1911,15 @@ function update(dt) {
       const bottleCenterY = 440;
       const barrelCenterX = 750;
       const barrelCenterY = 463;
-      
-      const isNearMain = Math.abs((player.x + player.renderWidth/2) - mainCenterX) < 150 && Math.abs((player.y + player.renderHeight) - 543) < 80;
-      const isNearBottle = Math.abs((player.x + player.renderWidth/2) - bottleCenterX) < 130 && Math.abs((player.y + player.renderHeight) - 486) < 80;
-      const distToBarrel = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - barrelCenterX, 2) + Math.pow((player.y + player.renderHeight/2) - barrelCenterY, 2));
-      
+
+      const isNearMain = Math.abs((player.x + player.renderWidth / 2) - mainCenterX) < 160 && Math.abs((player.baseY + player.renderHeight) - 543) < 100;
+      const isNearBottle = Math.abs((player.x + player.renderWidth / 2) - bottleCenterX) < 140 && Math.abs((player.baseY + player.renderHeight) - 486) < 100;
+      const distToBarrel = Math.sqrt(Math.pow((player.x + player.renderWidth / 2) - barrelCenterX, 2) + Math.pow((player.baseY + player.renderHeight / 2) - barrelCenterY, 2));
+
       let targetCabinet = null;
       let targetX = 0;
       let isBarrelTarget = false;
-      
+
       if (distToBarrel < 180 && !inventory.includes('Water')) {
         if (!isNearMain) {
           isBarrelTarget = true;
@@ -1798,16 +1935,16 @@ function update(dt) {
         targetCabinet = 'BOTTLE';
         targetX = bottleCenterX;
       }
-      
+
       // Worktable proximity & interaction
       const tableCenterX = 960;
       const tableCenterY = 770;
-      const distToTable = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - tableCenterX, 2) + Math.pow((player.y + player.renderHeight) - tableCenterY, 2));
+      const distToTable = Math.sqrt(Math.pow((player.x + player.renderWidth / 2) - tableCenterX, 2) + Math.pow((player.baseY + player.renderHeight) - tableCenterY, 2));
 
       if (isBarrelTarget) {
         interactionPrompt.classList.remove('hidden');
         interactionPrompt.textContent = "Hold E / Tap to Collect Water";
-        
+
         const containerRect = document.getElementById('game-container').getBoundingClientRect();
         const scaleX = containerRect.width / CANVAS_WIDTH;
         const scaleY = containerRect.height / CANVAS_HEIGHT;
@@ -1816,13 +1953,13 @@ function update(dt) {
       } else if (targetCabinet !== null) {
         interactionPrompt.classList.remove('hidden');
         interactionPrompt.textContent = targetCabinet === 'INGREDIENT' ? "Press E / Tap to Open Ingredients" : "Press E / Tap to Open Bottle Storage";
-        
+
         const containerRect = document.getElementById('game-container').getBoundingClientRect();
         const scaleX = containerRect.width / CANVAS_WIDTH;
         const scaleY = containerRect.height / CANVAS_HEIGHT;
         interactionPrompt.style.left = `${targetX * scaleX}px`;
         interactionPrompt.style.top = `${300 * scaleY}px`;
-        
+
         if (keysPressed.e) {
           activeCabinet = targetCabinet;
           openCabinetView();
@@ -1830,13 +1967,13 @@ function update(dt) {
       } else if (distToTable < 200) {
         interactionPrompt.classList.remove('hidden');
         interactionPrompt.textContent = "Press E / Tap to Use Worktable";
-        
+
         const containerRect = document.getElementById('game-container').getBoundingClientRect();
         const scaleX = containerRect.width / CANVAS_WIDTH;
         const scaleY = containerRect.height / CANVAS_HEIGHT;
         interactionPrompt.style.left = `${tableCenterX * scaleX}px`;
         interactionPrompt.style.top = `${660 * scaleY}px`;
-        
+
         if (keysPressed.e) {
           openWorktableView();
         }
@@ -1853,7 +1990,7 @@ function update(dt) {
           if (inventory.length < 10) {
             inventory.push('Water');
             checkIngredientsCollected();
-            
+
             const startX = 750;
             const startY = 463;
             const slotIndex = inventory.length - 1;
@@ -1861,9 +1998,9 @@ function update(dt) {
             const slotSpacing = 16;
             const slotX = 488 + slotIndex * (slotSize + slotSpacing);
             const slotY = 940;
-            const endX = slotX + slotSize/2;
-            const endY = slotY + slotSize/2;
-            
+            const endX = slotX + slotSize / 2;
+            const endY = slotY + slotSize / 2;
+
             activeAnimations.push({
               type: 'collect_slide',
               itemName: 'Water',
@@ -1877,7 +2014,7 @@ function update(dt) {
               duration: 0.6
             });
           }
-          
+
           holdTime = 0;
           activeHoldBarrel = false;
         }
@@ -1886,17 +2023,17 @@ function update(dt) {
           holdTime = 0;
         }
       }
-      
+
       // Stove Interaction logic (brewing)
       const stoveCenterX = 360;
       const stoveCenterY = 443;
-      const distToStove = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - stoveCenterX, 2) + Math.pow((player.y + player.renderHeight/2) - stoveCenterY, 2));
-      
+      const distToStove = Math.sqrt(Math.pow((player.x + player.renderWidth / 2) - stoveCenterX, 2) + Math.pow((player.y + player.renderHeight / 2) - stoveCenterY, 2));
+
       // For Willow Bark Decoction, strictly require "Willow Bark Mixture" + empty bottle (old shortcut removed!)
       const targetPage = ailmentToRecipePage[activeAilmentType] || 1;
       let hasRequiredForStove = false;
       let missingMessage = "";
-      
+
       if (targetPage === 1) {
         const hasMixture = inventory.includes("Willow Bark Mixture");
         const hasBottle = inventory.some(name => bottles.some(b => b.name === name));
@@ -1916,9 +2053,9 @@ function update(dt) {
         if (!hasIngredients) missingMessage = "Missing ingredients";
         else if (!hasBottle) missingMessage = "Need an empty bottle";
       }
-      
+
       const canBrew = (currentCustomerState === CustomerState.STEPS || currentCustomerState === CustomerState.CRAFTING) && hasRequiredForStove && !inventory.includes("Willow Bark Decoction");
-      
+
       if (distToStove < 180 && canBrew) {
         interactionPrompt.classList.remove('hidden');
         interactionPrompt.textContent = "Hold E / Tap to Brew Willow Bark Decoction";
@@ -1927,16 +2064,16 @@ function update(dt) {
         const scaleY = containerRect.height / CANVAS_HEIGHT;
         interactionPrompt.style.left = `${stoveCenterX * scaleX}px`;
         interactionPrompt.style.top = `${360 * scaleY}px`;
-        
+
         const isHoldingEOnStove = keys.e;
         const isHoldingMouseOnStove = activeHoldStove && isMouseDown;
-        
+
         if (isHoldingEOnStove || isHoldingMouseOnStove) {
           isBrewing = true;
           brewingTime += dt;
           if (brewingTime >= 1.5) {
             const emptyBottleName = inventory.find(name => bottles.some(b => b.name === name));
-            
+
             // Consume mixture or ingredients
             if (targetPage === 1) {
               const mixtureIndex = inventory.indexOf("Willow Bark Mixture");
@@ -1944,27 +2081,27 @@ function update(dt) {
             }
             const bottleIndex = inventory.indexOf(emptyBottleName);
             if (bottleIndex > -1) inventory.splice(bottleIndex, 1);
-            
+
             // Add brewed remedy
             inventory.push("Willow Bark Decoction");
-            
+
             // Reset brewing
             isBrewing = false;
             brewingTime = 0;
             activeHoldStove = false;
-            
+
             // State machine progression
             currentCustomerState = CustomerState.DELIVERY;
             updateObjective();
-            
+
             const slotIndex = inventory.length - 1;
             const slotSize = 80;
             const slotSpacing = 16;
             const slotX = 488 + slotIndex * (slotSize + slotSpacing);
             const slotY = 940;
-            const endX = slotX + slotSize/2;
-            const endY = slotY + slotSize/2;
-            
+            const endX = slotX + slotSize / 2;
+            const endY = slotY + slotSize / 2;
+
             activeAnimations.push({
               type: 'collect_slide',
               itemName: 'Willow Bark Decoction',
@@ -1993,7 +2130,7 @@ function update(dt) {
         isBrewing = false;
         brewingTime = 0;
       }
-      
+
       // Steam particle system updates (stove is at x=300)
       if (Math.random() < 0.15) {
         steamParticles.push({
@@ -2006,7 +2143,7 @@ function update(dt) {
           maxLife: 1.0 + Math.random() * 1.0
         });
       }
-      
+
       for (let i = steamParticles.length - 1; i >= 0; i--) {
         const p = steamParticles[i];
         p.x += p.vx * dt;
@@ -2019,8 +2156,26 @@ function update(dt) {
       }
     }
   } else if (currentState === GameState.WORKTABLE) {
-    interactionPrompt.classList.add('hidden');
-    
+    if (mortarState === 'FULL') {
+      interactionPrompt.classList.remove('hidden');
+      interactionPrompt.textContent = "Press E / Tap to Grind";
+      const containerRect = document.getElementById('game-container').getBoundingClientRect();
+      const scaleX = containerRect.width / CANVAS_WIDTH;
+      const scaleY = containerRect.height / CANVAS_HEIGHT;
+      interactionPrompt.style.left = `${580 * scaleX}px`;
+      interactionPrompt.style.top = `${280 * scaleY}px`;
+    } else if (copperBowlState === 'FULL') {
+      interactionPrompt.classList.remove('hidden');
+      interactionPrompt.textContent = "Press E / Tap to Collect Basin";
+      const containerRect = document.getElementById('game-container').getBoundingClientRect();
+      const scaleX = containerRect.width / CANVAS_WIDTH;
+      const scaleY = containerRect.height / CANVAS_HEIGHT;
+      interactionPrompt.style.left = `${1260 * scaleX}px`;
+      interactionPrompt.style.top = `${280 * scaleY}px`;
+    } else {
+      interactionPrompt.classList.add('hidden');
+    }
+
     // Mixing progression
     if (mortarState === 'MIXING') {
       mortarMixingTime += dt;
@@ -2035,20 +2190,20 @@ function update(dt) {
       } else if (copperBowlState === 'FULL' && keysPressed.e) {
         if (inventory.length < 10) {
           inventory.push("Willow Bark Mixture");
-          copperBowlState = 'EMPTY';
-          
+          copperBowlState = 'COLLECTED';
+
           const slotIndex = inventory.length - 1;
           const slotX = 488 + slotIndex * (slotSize + slotSpacing);
           const slotY = 940;
           activeAnimations.push({
             type: 'collect_slide',
             itemName: 'Willow Bark Mixture',
-            startX: 1240,
-            startY: 500,
-            x: 1240,
-            y: 500,
-            endX: slotX + slotSize/2,
-            endY: slotY + slotSize/2,
+            startX: 1260,
+            startY: 480,
+            x: 1260,
+            y: 480,
+            endX: slotX + slotSize / 2,
+            endY: slotY + slotSize / 2,
             progress: 0,
             duration: 0.6
           });
@@ -2058,7 +2213,7 @@ function update(dt) {
   } else if (currentState === GameState.CABINET) {
     updateHoveredJar();
     const list = activeCabinet === 'INGREDIENT' ? ingredients : bottles;
-    
+
     // Desktop holding: hovered and key E is held down
     if (hoveredJarIndex !== null && keys.e) {
       const name = list[hoveredJarIndex].name;
@@ -2085,7 +2240,7 @@ function update(dt) {
         holdTime = 0;
       }
     }
-    
+
     // Trigger successful collection
     if (activeHoldJarIndex !== null && holdTime >= 1.0) {
       const ing = list[activeHoldJarIndex];
@@ -2093,7 +2248,7 @@ function update(dt) {
         if (inventory.length < 10) {
           inventory.push(ing.name);
           checkIngredientsCollected();
-          
+
           // Slide animation values
           const r = Math.floor(activeHoldJarIndex / 3);
           const c = activeHoldJarIndex % 3;
@@ -2101,15 +2256,15 @@ function update(dt) {
           const colX = [480, 960, 1440];
           const startX = colX[c];
           const startY = rowY[r];
-          
+
           const slotIndex = inventory.length - 1;
           const slotSize = 80;
           const slotSpacing = 16;
           const slotX = 488 + slotIndex * (slotSize + slotSpacing);
           const slotY = 940;
-          const endX = slotX + slotSize/2;
-          const endY = slotY + slotSize/2;
-          
+          const endX = slotX + slotSize / 2;
+          const endY = slotY + slotSize / 2;
+
           activeAnimations.push({
             type: 'collect_slide',
             itemName: ing.name,
@@ -2144,32 +2299,41 @@ function update(dt) {
           dialoguePrompt.classList.remove('hidden');
         }
       }
-      if (keysPressed.e) {
-        dialogueIndex = activeDialogueString.length;
-        dialogueText.textContent = activeDialogueString;
-        isTyping = false;
-        dialoguePrompt.classList.remove('hidden');
+      if (keysPressed.e || keysPressed.space) {
+        advanceDialogue();
       }
     } else {
-      if (keysPressed.e) {
-        dialogueUI.classList.add('hidden');
-        currentState = GameState.GAMEPLAY;
-        
-        // State 1 -> State 2 Transition
-        if (currentCustomerState === CustomerState.ARRIVAL) {
-          const currentCustomer = customerData[activeCustomerNum];
-          if (currentCustomer) {
-            activeAilmentType = currentCustomer.ailment;
-          }
-          currentCustomerState = CustomerState.LOOKUP;
-          updateObjective();
-        }
+      if (keysPressed.e || keysPressed.space) {
+        advanceDialogue();
       }
     }
   }
 }
 
-function startDialogue() {
+function advanceDialogue() {
+  if (currentState !== GameState.DIALOGUE) return;
+  if (isTyping) {
+    dialogueIndex = activeDialogueString.length;
+    dialogueText.textContent = activeDialogueString;
+    isTyping = false;
+    dialoguePrompt.classList.remove('hidden');
+  } else {
+    dialogueUI.classList.add('hidden');
+    currentState = GameState.GAMEPLAY;
+
+    // State 1 -> State 2 Transition
+    if (currentCustomerState === CustomerState.ARRIVAL) {
+      const currentCustomer = customerData[activeCustomerNum];
+      if (currentCustomer) {
+        activeAilmentType = currentCustomer.ailment;
+      }
+      currentCustomerState = CustomerState.LOOKUP;
+      updateObjective();
+    }
+  }
+}
+
+function startDialogue(customText = null) {
   currentState = GameState.DIALOGUE;
   dialogueUI.classList.remove('hidden');
   dialoguePrompt.classList.add('hidden');
@@ -2177,9 +2341,13 @@ function startDialogue() {
   dialogueIndex = 0;
   isTyping = true;
   typeTimer = 0;
-  
-  const currentCustomer = customerData[activeCustomerNum];
-  activeDialogueString = currentCustomer ? currentCustomer.dialogue : "Hello!";
+
+  if (customText) {
+    activeDialogueString = customText;
+  } else {
+    const currentCustomer = customerData[activeCustomerNum];
+    activeDialogueString = currentCustomer ? currentCustomer.dialogue : "Hello!";
+  }
 }
 
 function drawBookImage(ctx, image, x, y, width, height, isHorizontal = false, isLeaning = false) {
@@ -2213,20 +2381,20 @@ function drawPottedPlant(ctx, x, shelfY, size, seed) {
 
 function drawVine(ctx, x, y, targetHeight) {
   if (!vineImage.complete) return;
-  
+
   const targetWidth = 60; // Increased width so leaves are large and visible
   const scale = targetWidth / vineImage.naturalWidth;
   const segmentHeight = vineImage.naturalHeight * scale; // ~282px
-  
+
   ctx.save();
   let drawnHeight = 0;
   while (drawnHeight < targetHeight) {
     const remainingHeight = targetHeight - drawnHeight;
     const drawH = Math.min(segmentHeight, remainingHeight);
-    
+
     // Calculate source height to crop
     const srcH = drawH / scale;
-    
+
     ctx.drawImage(
       vineImage,
       0, 0,
@@ -2234,7 +2402,7 @@ function drawVine(ctx, x, y, targetHeight) {
       x - targetWidth / 2, y + drawnHeight,
       targetWidth, drawH
     );
-    
+
     drawnHeight += drawH;
   }
   ctx.restore();
@@ -2244,27 +2412,27 @@ function drawBookcase(ctx, x1, x2) {
   ctx.fillStyle = '#8C6239'; // Honey wood base
   ctx.strokeStyle = '#4A2E1B';
   ctx.lineWidth = 4;
-  
+
   const floorY = CANVAS_HEIGHT * 0.6;
-  
+
   // Vertical support columns
   ctx.fillRect(x1, 0, 24, floorY);
   ctx.strokeRect(x1, -4, 24, floorY + 8);
   ctx.fillRect(x2 - 24, 0, 24, floorY);
   ctx.strokeRect(x2 - 24, -4, 24, floorY + 8);
-  
+
   // Honey Wood Highlights on columns
   ctx.fillStyle = '#C89A6A';
   ctx.fillRect(x1 + 4, 0, 4, floorY);
   ctx.fillRect(x2 - 20, 0, 4, floorY);
-  
+
   // Horizontal shelves
   const shelfHeights = [160, 280, 400];
   shelfHeights.forEach(sy => {
     ctx.fillStyle = '#8C6239';
     ctx.fillRect(x1, sy, x2 - x1, 20);
     ctx.strokeRect(x1, sy, x2 - x1, 20);
-    
+
     // Highlight edge
     ctx.fillStyle = '#C89A6A';
     ctx.fillRect(x1, sy + 2, x2 - x1, 4);
@@ -2275,7 +2443,7 @@ function drawShopBackground() {
   // 1. Draw Back Wall
   ctx.fillStyle = '#3E2F25'; // Darker cottagecore brown wall
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  
+
   // Wall panel lines
   ctx.strokeStyle = '#2F231B'; // Subtle dark panel lines
   ctx.lineWidth = 4;
@@ -2322,19 +2490,19 @@ function drawShopBackground() {
   plankRows.forEach((row, rowIndex) => {
     const nextY = rowIndex === 4 ? CANVAS_HEIGHT : row.y + rowHeight;
     const currentHeight = nextY - row.y;
-    
+
     // Define planks by splitting screen width at joint coordinates
     const joints = [0, ...row.joints, CANVAS_WIDTH];
-    
+
     for (let i = 0; i < joints.length - 1; i++) {
       const startX = joints[i];
-      const endX = joints[i+1];
+      const endX = joints[i + 1];
       const width = endX - startX;
-      
+
       // Stable color selection based on position
       const seed = Math.sin(startX * 0.03 + row.y * 0.07) * 10000;
       const rand = seed - Math.floor(seed);
-      
+
       // Distribute: Honey Oak (40%), Caramel (25%), Driftwood Tan (20%), Sun-bleached Beige (10%), Walnut (5%)
       let plankColor = '#C89A6A';
       if (rand < 0.05) {
@@ -2348,15 +2516,15 @@ function drawShopBackground() {
       } else {
         plankColor = '#C89A6A'; // Warm honey oak
       }
-      
+
       // Draw Plank Body
       ctx.fillStyle = plankColor;
       ctx.fillRect(startX, row.y, width, currentHeight);
-      
+
       // Draw Wood Grains (horizontal lines along the wood)
       ctx.save();
       ctx.lineWidth = 2;
-      
+
       // Determine grain color (slightly darker than base color)
       let grainColor = '#9A6B3E';
       if (plankColor === '#8B5E3C') grainColor = '#5c3d25';
@@ -2366,7 +2534,7 @@ function drawShopBackground() {
       if (plankColor === '#C89A6A') grainColor = '#a3764b';
 
       ctx.strokeStyle = grainColor;
-      
+
       // We draw 3 grain lines per plank at stable heights
       const grainOffsets = [0.25, 0.5, 0.75];
       grainOffsets.forEach((offset, gIdx) => {
@@ -2374,19 +2542,19 @@ function drawShopBackground() {
         // Stagger grain starts and lengths based on seed
         const startOffset = ((rand * (gIdx + 1) * 7.7) % 1) * (width * 0.4);
         const grainWidth = (0.4 + ((rand * (gIdx + 1) * 3.3) % 0.5)) * width;
-        
+
         ctx.beginPath();
         ctx.moveTo(startX + startOffset, grainY);
         ctx.lineTo(startX + startOffset + grainWidth, grainY);
         ctx.stroke();
       });
       ctx.restore();
-      
+
       // Draw highlights (top & left)
       ctx.fillStyle = '#EFE3D3'; // Warm light highlight
       ctx.fillRect(startX, row.y, width, 3); // Top highlight line
       ctx.fillRect(startX, row.y, 4, currentHeight); // Left highlight line
-      
+
       // Draw crevices (bottom & right)
       ctx.fillStyle = '#4A2E1B'; // Deep warm brown seam line
       ctx.fillRect(startX, row.y + currentHeight - 4, width, 4); // Bottom crevice
@@ -2403,14 +2571,14 @@ function drawShopBackground() {
         ctx.moveTo(scratchX, scratchY);
         ctx.lineTo(scratchX + 30, scratchY + 15);
         ctx.stroke();
-        
+
         ctx.strokeStyle = '#EFE3D3'; // Highlight edge of scratch
         ctx.beginPath();
         ctx.moveTo(scratchX, scratchY + 2);
         ctx.lineTo(scratchX + 30, scratchY + 17);
         ctx.stroke();
       }
-      
+
       // If rand is between 0.75 and 0.85, draw a worn scuff mark
       if (rand > 0.75 && rand < 0.85) {
         ctx.fillStyle = 'rgba(74, 46, 27, 0.25)'; // Dark scuff dirt
@@ -2433,7 +2601,7 @@ function drawShopBackground() {
   ctx.lineTo(1120, 520);
   ctx.closePath();
   ctx.clip();
-  
+
   // Sky/Sunrise Gradient
   const skyGrad = ctx.createLinearGradient(960, 60, 960, 520);
   skyGrad.addColorStop(0, '#e5b299'); // warm peach sunrise sky
@@ -2441,7 +2609,7 @@ function drawShopBackground() {
   skyGrad.addColorStop(1, '#d5e2c9'); // soft sage green hills backdrop
   ctx.fillStyle = skyGrad;
   ctx.fillRect(800, 60, 320, 460);
-  
+
   // Distant green hills
   ctx.fillStyle = '#6d8c55';
   ctx.beginPath();
@@ -2473,13 +2641,13 @@ function drawShopBackground() {
   // Window grilles
   ctx.strokeStyle = '#4A2E1B';
   ctx.lineWidth = 4;
-  
+
   // Vertical center divider
   ctx.beginPath();
   ctx.moveTo(960, 60);
   ctx.lineTo(960, 500);
   ctx.stroke();
-  
+
   // Horizontal dividers
   ctx.beginPath();
   ctx.moveTo(800, 220);
@@ -2591,11 +2759,11 @@ function drawCounterAndItems() {
     }
   });
   ctx.restore();
-  
+
   // Countertop slab
   ctx.fillStyle = '#A37A5C';
   ctx.fillRect(100, counterY, CANVAS_WIDTH - 200, 32);
-  
+
   // Counter outlines
   ctx.strokeStyle = '#4A3B32';
   ctx.lineWidth = 6;
@@ -2615,7 +2783,7 @@ function drawCounterAndItems() {
   if (plantImage.complete) ctx.drawImage(plantImage, 450, counterY - 128, 128, 128); // Plant 1
   drawFlask(ctx, flaskTypes[11], 650, counterY - 88);
   drawFlask(ctx, flaskTypes[12], 750, counterY - 88);
-  
+
   // Book/Scroll
   if (bookImage.complete) {
     // book base touches table (Y=520), ribbon hangs down
@@ -2637,56 +2805,57 @@ function drawCounterAndItems() {
 
 function drawGlows() {
   const t = Date.now() / 1000;
-  
+
   ctx.globalCompositeOperation = 'screen';
-  
+
   lightSources.forEach((src, idx) => {
     // Unique slow flicker/breathing phase for each light source
     const t_i = t + idx * 1.7;
     const flicker = 0.95 + 0.05 * Math.sin(t_i * 2.8) + 0.02 * Math.cos(t_i * 7.4) + 0.01 * Math.sin(t_i * 15.3);
     const radius = src.radius * flicker;
-    
+
     // radial gradient glow halo, amber-gold (#F4C05E)
     const grad = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, radius);
-    
+
     const maxOpacity = src.type === 'candle' ? 0.55 : 0.45;
     grad.addColorStop(0, `rgba(244, 192, 94, ${maxOpacity})`);
     grad.addColorStop(0.3, `rgba(244, 192, 94, ${maxOpacity * 0.5})`);
     grad.addColorStop(1, 'rgba(244, 192, 94, 0)');
-    
+
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(src.x, src.y, radius, 0, Math.PI * 2);
     ctx.fill();
   });
-  
+
   ctx.globalCompositeOperation = 'source-over';
 }
 
 function draw() {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   if (currentState === GameState.MENU || currentState === GameState.TRANSITION) return;
-  
+
   if (currentRoom === RoomState.SHOP) {
     // 1. Base Wall, Floor, Shelves, Jars, Lanterns, Wall light falloffs
     drawShopBackground();
-    
+
     // 2. Draw Apothecary behind the counter
-    // Retro drop shadow
+    // Ground drop shadow
+    const shopShadowScale = Math.max(0.4, 1 - Math.abs(player.jumpOffset) / 350);
     ctx.fillStyle = 'rgba(74, 59, 50, 0.45)';
     ctx.beginPath();
-    ctx.ellipse(player.x + player.renderWidth/2, player.y + player.renderHeight, player.renderWidth/2, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(player.x + player.renderWidth / 2, player.baseY + player.renderHeight, (player.renderWidth / 2) * shopShadowScale, 10 * shopShadowScale, 0, 0, Math.PI * 2);
     ctx.fill();
     drawPlayerImage(ctx, player.x, player.y);
-    
+
     // 3. Draw Wooden Counter, countertop items, and countertop light falloffs
     drawCounterAndItems();
-    
+
     // 4. Draw NPC Customer in front of the counter
     if (npc.active) {
       ctx.fillStyle = 'rgba(74, 59, 50, 0.45)';
       ctx.beginPath();
-      ctx.ellipse(npc.x + npc.renderWidth/2, npc.y + npc.renderHeight, npc.renderWidth/2, 10, 0, 0, Math.PI * 2);
+      ctx.ellipse(npc.x + npc.renderWidth / 2, npc.y + npc.renderHeight, npc.renderWidth / 2, 10, 0, 0, Math.PI * 2);
       ctx.fill();
       drawSprite(ctx, playerSprite, npcColorMap, npc.x, npc.y, pixelScale);
     }
@@ -2704,46 +2873,46 @@ function draw() {
       // Right Snake Plant
       ctx.drawImage(snakePlantImage, CANVAS_WIDTH - 32 * 11 - 50, CANVAS_HEIGHT - 32 * 11, 352, 352);
     }
-    
+
     // 5. Draw Ambient shadowy room tint overlay
     ctx.fillStyle = 'rgba(25, 20, 35, 0.25)';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    
+
     // 6. Draw Glow Halos
     drawGlows();
-    
+
   } else if (currentRoom === RoomState.WORKROOM) {
     // 1. Draw Workroom wood backing, wall, floor planks
     drawWorkroomBackground();
-    
+
     // 2. Draw Y-Sorted Entities (stove, main cabinet, second cabinet, worktable, player)
     drawWorkroomEntities();
-    
+
     // 3. Draw Steam Wisps
     drawSteamParticles();
-    
+
     // 4. Tint
     ctx.fillStyle = 'rgba(25, 20, 35, 0.2)';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    
+
     // 5. Glows
     drawWorkroomGlows();
 
     // 6. Barrel progress indicator
-    const distToBarrel = Math.sqrt(Math.pow((player.x + player.renderWidth/2) - 750, 2) + Math.pow((player.y + player.renderHeight/2) - 463, 2));
+    const distToBarrel = Math.sqrt(Math.pow((player.x + player.renderWidth / 2) - 750, 2) + Math.pow((player.y + player.renderHeight / 2) - 463, 2));
     const isHoldingEOnBarrel = (distToBarrel < 180 && keys.e && !inventory.includes('Water'));
     const isHoldingMouseOnBarrel = (activeHoldBarrel && isMouseDown && !inventory.includes('Water'));
     if (holdTime > 0 && (isHoldingEOnBarrel || isHoldingMouseOnBarrel)) {
       const barrelCenterX = 750;
       const barrelCenterY = 463;
       const progress = holdTime / 1.0;
-      
+
       ctx.beginPath();
       ctx.arc(barrelCenterX, barrelCenterY, 70, 0, Math.PI * 2);
       ctx.strokeStyle = 'rgba(29, 21, 17, 0.4)';
       ctx.lineWidth = 8;
       ctx.stroke();
-      
+
       ctx.beginPath();
       ctx.arc(barrelCenterX, barrelCenterY, 70, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
       ctx.strokeStyle = '#F4C05E'; // glowing gold Progress Arc
@@ -2756,13 +2925,13 @@ function draw() {
       const stoveCenterX = 360;
       const stoveCenterY = 443;
       const progress = brewingTime / 1.5;
-      
+
       ctx.beginPath();
       ctx.arc(stoveCenterX, stoveCenterY, 70, 0, Math.PI * 2);
       ctx.strokeStyle = 'rgba(29, 21, 17, 0.4)';
       ctx.lineWidth = 8;
       ctx.stroke();
-      
+
       ctx.beginPath();
       ctx.arc(stoveCenterX, stoveCenterY, 70, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
       ctx.strokeStyle = '#F4C05E'; // glowing gold Progress Arc
@@ -2770,7 +2939,7 @@ function draw() {
       ctx.stroke();
     }
   }
-  
+
   // Worktable View Overlay
   if (currentState === GameState.WORKTABLE) {
     drawWorktableView();
@@ -2780,28 +2949,84 @@ function draw() {
   if (currentState === GameState.CABINET) {
     drawCabinetView();
   }
-  
+
   // Inventory Hotbar (visible in both rooms during gameplay/cabinet/worktable)
   if (currentState === GameState.GAMEPLAY || currentState === GameState.CABINET || currentState === GameState.WORKTABLE) {
     drawInventoryHotbar();
   }
-  
+
   // Active Slide Animations
   drawActiveAnimations();
-  
+
   // Dragged Item
   if (draggedItemIndex !== null) {
     drawInventoryItem(ctx, inventory[draggedItemIndex], draggedItemX, draggedItemY, 4);
   }
   if (isDraggingFromMortar) {
-    drawInventoryItem(ctx, 'Willow Bark Mixture', draggedItemX, draggedItemY, 4);
+    drawDraggedMixture(ctx, draggedItemX, draggedItemY);
   }
-  
+
   // Transition Overlay
   if (transitionAlpha > 0) {
     ctx.fillStyle = `rgba(0, 0, 0, ${transitionAlpha})`;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   }
+}
+
+function drawDraggedMixture(ctx, x, y) {
+  ctx.save();
+  // 1. Soft glowing aura around dragged mixture
+  const auraGrad = ctx.createRadialGradient(x, y, 6, x, y, 48);
+  auraGrad.addColorStop(0, 'rgba(212, 140, 80, 0.75)');
+  auraGrad.addColorStop(0.5, 'rgba(160, 82, 45, 0.4)');
+  auraGrad.addColorStop(1, 'rgba(139, 69, 19, 0)');
+  ctx.fillStyle = auraGrad;
+  ctx.beginPath();
+  ctx.arc(x, y, 48, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. Translucent drop shadow under mixture
+  ctx.fillStyle = 'rgba(20, 12, 8, 0.55)';
+  ctx.beginPath();
+  ctx.ellipse(x, y + 10, 32, 14, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 3. Rich brown herbal paste blob (organic shape)
+  ctx.fillStyle = '#6E2D1F'; // Deep rich brown herbal paste
+  ctx.beginPath();
+  ctx.ellipse(x, y, 30, 22, -0.08, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Highlighted texture layers
+  ctx.fillStyle = '#9C422A';
+  ctx.beginPath();
+  ctx.ellipse(x - 4, y - 3, 20, 13, -0.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#B8583B';
+  ctx.beginPath();
+  ctx.ellipse(x - 2, y - 5, 12, 7, -0.1, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Botanical grain specks & extract flecks
+  ctx.fillStyle = '#E8B67D';
+  ctx.beginPath();
+  ctx.arc(x - 8, y - 5, 3.5, 0, Math.PI * 2);
+  ctx.arc(x + 7, y - 3, 3, 0, Math.PI * 2);
+  ctx.arc(x + 2, y + 5, 3, 0, Math.PI * 2);
+  ctx.arc(x - 3, y + 3, 2.5, 0, Math.PI * 2);
+  ctx.arc(x - 11, y + 2, 2.2, 0, Math.PI * 2);
+  ctx.arc(x + 10, y + 4, 2.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Organic outline
+  ctx.strokeStyle = 'rgba(45, 18, 10, 0.75)';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.ellipse(x, y, 30, 22, -0.08, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.restore();
 }
 
 // --- WORKTABLE CLOSE-UP VIEW ---
@@ -2813,37 +3038,42 @@ function drawWorktableView() {
     ctx.fillStyle = '#4A2E1B';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   }
-  
+
   // Clean ambient lighting
   ctx.fillStyle = 'rgba(25, 20, 35, 0.1)';
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  
+
   // Ensure completely solid, opaque rendering
   ctx.globalAlpha = 1.0;
   ctx.globalCompositeOperation = 'source-over';
-  
-  // 2. Positions and proportions for Mortar & Pestle and Copper Basin (images are 693x360)
-  const mortarCenterX = 680;
-  const mortarCenterY = 510;
-  const mortarH = 215;
-  const mortarW = mortarH * (693 / 360); // 414
-  
-  const bowlCenterX = 1240;
+
+  // 2. Positions and proportions for Mortar & Pestle and Copper Basin (aspect ratio 693:360)
+  const mortarCenterX = 580;
+  const mortarCenterY = 480;
+  const mortarH = 300; // Only a little smaller than copper basin (340)
+  const mortarW = mortarH * (693 / 360); // 577.5 (exact 693:360 ratio preserved)
+
+  const bowlCenterX = 1260;
   const bowlCenterY = 480;
   const bowlH = 340;
   const bowlW = bowlH * (693 / 360); // 654.5
-  
+
   // Grounding soft shadows under props
-  ctx.fillStyle = 'rgba(27, 19, 14, 0.45)';
+  // Shadow under Mortar & Pestle
+  ctx.fillStyle = 'rgba(15, 10, 7, 0.6)';
   ctx.beginPath();
-  ctx.ellipse(mortarCenterX, mortarCenterY + 80, 75, 14, 0, 0, Math.PI * 2);
+  ctx.ellipse(mortarCenterX, mortarCenterY + 115, 180, 26, 0, 0, Math.PI * 2);
   ctx.fill();
-  
-  ctx.beginPath();
-  ctx.ellipse(bowlCenterX, bowlCenterY + 115, 140, 24, 0, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Draw Solid Mortar & Pestle with warm amber color grading filter
+
+  // Shadow under Copper Basin (only if present on table)
+  if (copperBowlState !== 'COLLECTED') {
+    ctx.fillStyle = 'rgba(27, 19, 14, 0.45)';
+    ctx.beginPath();
+    ctx.ellipse(bowlCenterX, bowlCenterY + 115, 160, 24, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Draw Solid Mortar & Pestle (as-is, unaltered)
   let currentMortarImg = mortarEmptyImage;
   if (mortarState === 'EMPTY') {
     currentMortarImg = mortarEmptyImage;
@@ -2855,78 +3085,62 @@ function drawWorktableView() {
     const isFrame1 = Math.floor(mortarMixingTime / 0.2) % 2 === 0;
     currentMortarImg = isFrame1 ? mortarFull1Image : mortarFull2Image;
   }
-  
+
   if (currentMortarImg && currentMortarImg.complete) {
+    ctx.drawImage(currentMortarImg, mortarCenterX - mortarW / 2, mortarCenterY - mortarH / 2, mortarW, mortarH);
+  }
+
+  // Draw Solid Copper Basin (only if not collected)
+  if (copperBowlState !== 'COLLECTED') {
+    let currentBowlImg = copperBowlState === 'FULL' ? copperBowlFullImage : copperBowlEmptyImage;
+    if (currentBowlImg && currentBowlImg.complete) {
+      ctx.drawImage(currentBowlImg, bowlCenterX - bowlW / 2, bowlCenterY - bowlH / 2, bowlW, bowlH);
+    }
+  }
+
+  // Status tag: Only display "Drop mixture here" above Copper Basin after grinding finishes and bowl is empty
+  if (mortarState === 'MIXED' && copperBowlState === 'EMPTY') {
     ctx.save();
-    // Warm, golden filter integration matching candlelight shading
-    ctx.filter = 'sepia(0.3) saturate(1.25) brightness(0.95) hue-rotate(-6deg)';
-    ctx.drawImage(currentMortarImg, mortarCenterX - mortarW/2, mortarCenterY - mortarH/2, mortarW, mortarH);
+    ctx.font = 'bold 22px "EB Garamond", serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const bowlStatusText = "Drop mixture here";
+    const bLabelW = ctx.measureText(bowlStatusText).width + 28;
+    ctx.fillStyle = '#F5F2EB';
+    ctx.fillRect(bowlCenterX - bLabelW / 2, bowlCenterY - 180, bLabelW, 36);
+    ctx.strokeStyle = '#1d1511';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(bowlCenterX - bLabelW / 2, bowlCenterY - 180, bLabelW, 36);
+    ctx.fillStyle = '#4A3B32';
+    ctx.fillText(bowlStatusText, bowlCenterX, bowlCenterY - 162);
     ctx.restore();
   }
-  
-  // Draw Solid Copper Basin (unaltered 693x360 image)
-  let currentBowlImg = copperBowlState === 'FULL' ? copperBowlFullImage : copperBowlEmptyImage;
-  if (currentBowlImg && currentBowlImg.complete) {
-    ctx.drawImage(currentBowlImg, bowlCenterX - bowlW/2, bowlCenterY - bowlH/2, bowlW, bowlH);
-  }
-  
-  // Status Cards / Prompts above props
-  ctx.save();
-  ctx.font = 'bold 22px "EB Garamond", serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  
-  // Mortar status card
-  let mortarStatusText = "Mortar & Pestle (Empty)";
-  if (mortarState === 'HALF') mortarStatusText = "1 Ingredient Added";
-  else if (mortarState === 'FULL') mortarStatusText = "Ready to Mix (Press E / Tap)";
-  else if (mortarState === 'MIXING') mortarStatusText = "Grinding...";
-  else if (mortarState === 'MIXED') mortarStatusText = "Mixed! Drag to Copper Basin";
-  
-  const mLabelW = ctx.measureText(mortarStatusText).width + 28;
-  ctx.fillStyle = '#F5F2EB';
-  ctx.strokeStyle = '#1d1511';
-  ctx.lineWidth = 3;
-  ctx.fillRect(mortarCenterX - mLabelW/2, mortarCenterY - 115, mLabelW, 36);
-  ctx.strokeRect(mortarCenterX - mLabelW/2, mortarCenterY - 115, mLabelW, 36);
-  ctx.fillStyle = '#4A3B32';
-  ctx.fillText(mortarStatusText, mortarCenterX, mortarCenterY - 97);
-  
-  // Copper Basin status card
-  let bowlStatusText = copperBowlState === 'FULL' ? "Full of Mixture (Tap / Press E to Collect)" : "Copper Basin (Empty - Drop mixture here)";
-  const bLabelW = ctx.measureText(bowlStatusText).width + 28;
-  ctx.fillStyle = '#F5F2EB';
-  ctx.fillRect(bowlCenterX - bLabelW/2, bowlCenterY - 165, bLabelW, 36);
-  ctx.strokeRect(bowlCenterX - bLabelW/2, bowlCenterY - 165, bLabelW, 36);
-  ctx.fillStyle = '#4A3B32';
-  ctx.fillText(bowlStatusText, bowlCenterX, bowlCenterY - 147);
-  
-  ctx.restore();
-  
+
   // 3. Mixing Progress Arc during 5-second mixing
   if (mortarState === 'MIXING') {
     const progress = mortarMixingTime / 5.0;
-    
+
     ctx.beginPath();
-    ctx.arc(mortarCenterX, mortarCenterY, 55, 0, Math.PI * 2);
+    ctx.arc(mortarCenterX, mortarCenterY, 70, 0, Math.PI * 2);
     ctx.strokeStyle = 'rgba(29, 21, 17, 0.5)';
     ctx.lineWidth = 10;
     ctx.stroke();
-    
+
     ctx.beginPath();
-    ctx.arc(mortarCenterX, mortarCenterY, 55, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+    ctx.arc(mortarCenterX, mortarCenterY, 70, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
     ctx.strokeStyle = '#F4C05E'; // glowing gold Progress Arc
     ctx.lineWidth = 10;
     ctx.stroke();
   }
-  
+
   // 4. Close Button [Esc]
   ctx.fillStyle = '#F5F2EB';
   ctx.strokeStyle = '#1d1511';
   ctx.lineWidth = 4;
   ctx.fillRect(1740, 50, 120, 60);
   ctx.strokeRect(1740, 50, 120, 60);
-  
+
   ctx.fillStyle = '#4A3B32';
   ctx.font = 'bold 24px "EB Garamond", serif';
   ctx.textAlign = 'center';
@@ -2994,7 +3208,7 @@ function drawShelfMortar(ctx, x, y) {
   ctx.moveTo(x + 16, y);
   ctx.lineTo(x + 6, y + 12);
   ctx.stroke();
-  
+
   ctx.strokeStyle = '#D0D0D0';
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -3394,7 +3608,7 @@ function drawWorkroomBackground() {
   };
   drawSack(610, 460);
   drawSack(630, 468);
-  
+
   // Crates
   const drawCrate = (cx, cy) => {
     ctx.fillStyle = '#1B130E';
@@ -3621,19 +3835,20 @@ function drawWorkroomEntities() {
       }
     },
     {
-      y: player.y + player.renderHeight,
+      y: player.baseY + player.renderHeight,
       draw: () => {
-        // Draw Player Shadow
+        // Draw Player Shadow on ground
+        const workroomShadowScale = Math.max(0.4, 1 - Math.abs(player.jumpOffset) / 350);
         ctx.fillStyle = 'rgba(27, 19, 14, 0.45)';
         ctx.beginPath();
-        ctx.ellipse(player.x + player.renderWidth/2, player.y + player.renderHeight, player.renderWidth/2, 10, 0, 0, Math.PI * 2);
+        ctx.ellipse(player.x + player.renderWidth / 2, player.baseY + player.renderHeight, (player.renderWidth / 2) * workroomShadowScale, 10 * workroomShadowScale, 0, 0, Math.PI * 2);
         ctx.fill();
         // Draw Player
         drawPlayerImage(ctx, player.x, player.y);
       }
     }
   ];
-  
+
   // 2.5D Y-Sort
   drawables.sort((a, b) => a.y - b.y);
   drawables.forEach(d => d.draw());
@@ -3651,10 +3866,10 @@ function drawSteamParticles() {
 
 function drawWorkroomGlows() {
   const t = Date.now() / 1000;
-  
+
   // 1. Draw glowing lights (screen mode)
   ctx.globalCompositeOperation = 'screen';
-  
+
   // Define workroom glowing lights:
   const glows = [
     { x: 216, y: 200, r: 100, color: 'rgba(244, 192, 94, 0.45)' },   // Lantern 1
@@ -3663,25 +3878,25 @@ function drawWorkroomGlows() {
     { x: 1538, y: 250, r: 55, color: 'rgba(244, 192, 94, 0.45)' },   // Candle 2 on Cabinet
     { x: 360, y: 430, r: 160, color: 'rgba(220, 70, 50, 0.45)' }     // Stove furnace red/orange glow
   ];
-  
+
   glows.forEach((src, idx) => {
     const t_i = t + idx * 1.3;
     const flicker = 0.94 + 0.06 * Math.sin(t_i * 3.1) + 0.02 * Math.cos(t_i * 8.2);
     const radius = src.r * flicker;
-    
+
     const grad = ctx.createRadialGradient(src.x, src.y, 0, src.x, src.y, radius);
     grad.addColorStop(0, src.color);
     grad.addColorStop(0.35, src.color.replace(/[\d\.]+\)$/, '0.15)'));
     grad.addColorStop(1, 'rgba(244, 192, 94, 0)');
-    
+
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(src.x, src.y, radius, 0, Math.PI * 2);
     ctx.fill();
   });
-  
+
   ctx.globalCompositeOperation = 'source-over';
-  
+
   // 2. Cinematic Vignette (multiply mode to darken borders in a warm sepia tone)
   ctx.globalCompositeOperation = 'multiply';
   const vignetteGrad = ctx.createRadialGradient(
@@ -3692,7 +3907,7 @@ function drawWorkroomGlows() {
   vignetteGrad.addColorStop(1, '#A09085'); // Edges darkened warmly
   ctx.fillStyle = vignetteGrad;
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  
+
   ctx.globalCompositeOperation = 'source-over';
 }
 
@@ -3702,42 +3917,42 @@ function drawCabinetView() {
   // Wooden cabinet background backing
   ctx.fillStyle = '#2F231B';
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  
+
   // Cabinet outer frames
   ctx.strokeStyle = '#8C6239';
   ctx.lineWidth = 16;
   ctx.strokeRect(8, 8, CANVAS_WIDTH - 16, CANVAS_HEIGHT - 16);
-  
+
   ctx.strokeStyle = '#1d1511';
   ctx.lineWidth = 4;
   ctx.strokeRect(16, 16, CANVAS_WIDTH - 32, CANVAS_HEIGHT - 32);
-  
+
   // Cabinet interior shelves
   const shelvesY = [310, 570, 830];
   shelvesY.forEach(sy => {
     ctx.fillStyle = '#8C6239';
     ctx.fillRect(100, sy, CANVAS_WIDTH - 200, 24);
-    
+
     ctx.strokeStyle = '#1d1511';
     ctx.lineWidth = 4;
     ctx.strokeRect(100, sy, CANVAS_WIDTH - 200, 24);
-    
+
     ctx.fillStyle = '#C89A6A';
     ctx.fillRect(100, sy + 2, CANVAS_WIDTH - 200, 4);
   });
-  
+
   // Title Header
   ctx.fillStyle = '#F5F2EB';
   ctx.font = 'bold 44px "EB Garamond", serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   const titleText = activeCabinet === 'INGREDIENT' ? "Apothecary Cabinet - Ingredients" : "Storage Cabinet - Empty Bottles";
-  ctx.fillText(titleText, CANVAS_WIDTH/2, 40);
-  
+  ctx.fillText(titleText, CANVAS_WIDTH / 2, 40);
+
   // Category headers
   const list = activeCabinet === 'INGREDIENT' ? ingredients : bottles;
   const categories = activeCabinet === 'INGREDIENT' ? ['Roots & Barks', 'Binders & Bases', 'Sweeteners & Flavorings'] : ['Clear Bottles', 'Cobalt Blue Bottles', 'Amber Bottles'];
-  
+
   ctx.fillStyle = '#F0E4CC';
   ctx.font = 'bold 36px "EB Garamond", serif';
   ctx.textAlign = 'left';
@@ -3745,45 +3960,45 @@ function drawCabinetView() {
   ctx.fillText(categories[0], 120, 160);
   ctx.fillText(categories[1], 120, 420);
   ctx.fillText(categories[2], 120, 680);
-  
+
   // Jars and labels drawing
   const rowY = [250, 510, 770];
   const colX = [480, 960, 1440];
-  
+
   for (let i = 0; i < 9; i++) {
     const r = Math.floor(i / 3);
     const c = i % 3;
     const jarX = colX[c];
     const jarY = rowY[r];
-    
+
     const isCollected = inventory.includes(list[i].name);
-    
+
     ctx.save();
     if (isCollected) {
       ctx.globalAlpha = 0.45; // Dim collected jars
     }
-    
+
     // Draw the jar (pixelScale = 8)
     drawCabinetJar(ctx, list[i], jarX, jarY, 8);
     ctx.restore();
-    
+
     // Draw hand-lettered label card beneath
     const labelW = 180;
     const labelH = 40;
     const ly = jarY + 80;
-    
+
     ctx.fillStyle = '#F5F2EB';
     ctx.strokeStyle = '#1d1511';
     ctx.lineWidth = 3;
-    ctx.fillRect(jarX - labelW/2, ly, labelW, labelH);
-    ctx.strokeRect(jarX - labelW/2, ly, labelW, labelH);
-    
+    ctx.fillRect(jarX - labelW / 2, ly, labelW, labelH);
+    ctx.strokeRect(jarX - labelW / 2, ly, labelW, labelH);
+
     ctx.fillStyle = '#4A3B32';
     ctx.font = 'bold 20px "EB Garamond", serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(list[i].name, jarX, ly + labelH/2);
-    
+    ctx.fillText(list[i].name, jarX, ly + labelH / 2);
+
     // Radial hold-progress feedback
     if (activeHoldJarIndex === i) {
       const progress = holdTime / 1.0;
@@ -3792,7 +4007,7 @@ function drawCabinetView() {
       ctx.strokeStyle = 'rgba(29, 21, 17, 0.4)';
       ctx.lineWidth = 8;
       ctx.stroke();
-      
+
       ctx.beginPath();
       ctx.arc(jarX, jarY, 70, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
       ctx.strokeStyle = '#F4C05E'; // glowing gold Progress Arc
@@ -3800,14 +4015,14 @@ function drawCabinetView() {
       ctx.stroke();
     }
   }
-  
+
   // Close Button [Esc]
   ctx.fillStyle = '#F5F2EB';
   ctx.strokeStyle = '#1d1511';
   ctx.lineWidth = 4;
   ctx.fillRect(1740, 50, 120, 60);
   ctx.strokeRect(1740, 50, 120, 60);
-  
+
   ctx.fillStyle = '#4A3B32';
   ctx.font = 'bold 24px "EB Garamond", serif';
   ctx.textAlign = 'center';
@@ -3840,17 +4055,23 @@ function drawInventoryItem(ctx, name, x, y, scale) {
     return;
   }
   if (name === "Willow Bark Mixture") {
-    // Draw miniature copper dish with mixture
-    ctx.fillStyle = '#1B130E';
-    ctx.fillRect(x - 22, y - 8, 44, 22);
-    ctx.fillStyle = '#B57F4F';
-    ctx.fillRect(x - 20, y - 6, 40, 18);
-    ctx.fillStyle = '#D9C1A0';
-    ctx.fillRect(x - 18, y - 4, 36, 3);
-    ctx.fillStyle = '#8A3B2B'; // reddish brown ground mixture
-    ctx.fillRect(x - 14, y - 1, 28, 11);
-    ctx.fillStyle = '#B05535';
-    ctx.fillRect(x - 10, y + 1, 20, 7);
+    // Draw full copper basin with mixture
+    if (copperBowlFullImage && copperBowlFullImage.complete) {
+      const w = 68;
+      const h = 68 * (360 / 693);
+      ctx.drawImage(copperBowlFullImage, x - w / 2, y - h / 2, w, h);
+    } else {
+      ctx.fillStyle = '#1B130E';
+      ctx.fillRect(x - 22, y - 8, 44, 22);
+      ctx.fillStyle = '#B57F4F';
+      ctx.fillRect(x - 20, y - 6, 40, 18);
+      ctx.fillStyle = '#D9C1A0';
+      ctx.fillRect(x - 18, y - 4, 36, 3);
+      ctx.fillStyle = '#8A3B2B'; // reddish brown ground mixture
+      ctx.fillRect(x - 14, y - 1, 28, 11);
+      ctx.fillStyle = '#B05535';
+      ctx.fillRect(x - 10, y + 1, 20, 7);
+    }
     return;
   }
   if (name === "Willow Bark Decoction") {
@@ -3862,31 +4083,31 @@ function drawInventoryHotbar() {
   // Wooden plank backer (holds 1 row, height 120px, width 984px centered)
   ctx.fillStyle = '#8C6239';
   ctx.fillRect(468, hotbarY, 984, 120);
-  
+
   ctx.strokeStyle = '#1d1511';
   ctx.lineWidth = 6;
   ctx.strokeRect(468, hotbarY, 984, 120);
-  
+
   ctx.fillStyle = '#C89A6A';
   ctx.fillRect(468, hotbarY + 2, 984, 4);
-  
+
   // Draw 10 slots
   for (let i = 0; i < 10; i++) {
     const slotX = 488 + i * (slotSize + slotSpacing);
     const slotY = hotbarY + 20;
-    
+
     // Slot frame
     ctx.fillStyle = '#4A2E1B';
     ctx.fillRect(slotX, slotY, slotSize, slotSize);
-    
+
     ctx.strokeStyle = '#1d1511';
     ctx.lineWidth = 4;
     ctx.strokeRect(slotX, slotY, slotSize, slotSize);
-    
+
     // Draw item in slot if exists, and not currently being dragged
     if (i < inventory.length) {
       if (draggedItemIndex !== i) {
-        drawInventoryItem(ctx, inventory[i], slotX + slotSize/2, slotY + slotSize/2, 4);
+        drawInventoryItem(ctx, inventory[i], slotX + slotSize / 2, slotY + slotSize / 2, 4);
       }
     }
   }
@@ -3914,10 +4135,11 @@ const recipes = {
       "Water (available on stove)"
     ],
     steps: [
-      "Crush willow bark using mortar and pestle",
-      "Boil crushed bark in water for an extended period to extract salicin",
-      "Strain through cloth to remove plant fibers",
-      "Transfer syrup to an empty bottle"
+      "Collect ingredients",
+      "Crush ingredients using mortar pestel on working table",
+      "Transfer to copper basin",
+      "Boil mixture on stove",
+      "Deliver to customer"
     ],
     icon: "🍃"
   },
@@ -3963,11 +4185,11 @@ function openBookView(page = 1) {
   activeRecipePage = page;
   interactionPrompt.classList.add('hidden');
   document.getElementById('book-ui').classList.remove('hidden');
-  
+
   if (currentCustomerState === CustomerState.STEPS) {
     hasOpenedBookInStepsState = true;
   }
-  
+
   renderBookPage();
 }
 
@@ -3978,17 +4200,17 @@ function closeBookView() {
 
 function checkIngredientsCollected() {
   if (currentCustomerState !== CustomerState.INGREDIENTS) return;
-  
+
   const targetPage = ailmentToRecipePage[activeAilmentType];
   const recipeIngredientsMap = {
     1: ["Willow Bark", "Water"],
     2: ["Beeswax", "Fats", "Herbal Extract"],
     3: ["Tulsi", "Ginger", "Black Pepper", "Jaggery", "Honey"]
   };
-  
+
   const reqList = recipeIngredientsMap[targetPage];
   if (!reqList) return;
-  
+
   const allPresent = reqList.every(ingName => inventory.includes(ingName));
   if (allPresent) {
     currentCustomerState = CustomerState.STEPS;
@@ -4001,7 +4223,7 @@ function renderBookPage() {
   const recipe = recipes[activeRecipePage];
   const isAcquired = acquiredRecipes.includes(activeRecipePage);
   const targetPage = ailmentToRecipePage[activeAilmentType];
-  
+
   // Highlight active page in Left Page Index
   document.querySelectorAll('.recipe-index .index-item').forEach(item => {
     const pageNum = parseInt(item.getAttribute('data-page'));
@@ -4010,7 +4232,7 @@ function renderBookPage() {
     } else {
       item.classList.remove('active');
     }
-    
+
     // Page lookup indicator (STATE 2)
     if (currentCustomerState === CustomerState.LOOKUP && pageNum === targetPage) {
       item.classList.add('lookup-indicator');
@@ -4018,14 +4240,6 @@ function renderBookPage() {
       item.classList.remove('lookup-indicator');
     }
   });
-
-  // State 2 -> State 3 Transition on correct page opened
-  if (currentCustomerState === CustomerState.LOOKUP && activeRecipePage === targetPage) {
-    currentCustomerState = CustomerState.INGREDIENTS;
-    acquireRecipe(targetPage);
-    updateObjective();
-    checkIngredientsCollected();
-  }
 
   // Render navigation button visibility
   const prevBtn = document.getElementById('book-prev-btn');
@@ -4076,9 +4290,9 @@ function renderBookPage() {
     <h4 class="recipe-section-title">Ingredients</h4>
     <ul class="recipe-ingredients-list">
       ${recipe.ingredients.map(ing => {
-        const isPresent = isIngredientInInventory(ing);
-        return `<li style="display: flex; align-items: center; gap: 8px;">${ing} ${isPresent ? '<span class="ing-check" style="font-size: 1.2rem;">✅</span>' : ''}</li>`;
-      }).join('')}
+    const isPresent = isIngredientInInventory(ing);
+    return `<li style="display: flex; align-items: center; gap: 8px;">${ing} ${isPresent ? '<span class="ing-check" style="font-size: 1.2rem;">✅</span>' : ''}</li>`;
+  }).join('')}
     </ul>
     
     <h4 class="recipe-section-title">Preparation Steps</h4>
@@ -4095,7 +4309,20 @@ function renderBookPage() {
       if (isAcquired) {
         unacquireRecipe(activeRecipePage);
       } else {
+        const targetPage = ailmentToRecipePage[activeAilmentType];
+        if (targetPage && activeRecipePage !== targetPage) {
+          // Attempting to acquire incorrect recipe: trigger horizontal shake animation
+          letsMakeBtn.classList.remove('btn-shake-incorrect');
+          void letsMakeBtn.offsetWidth; // force reflow
+          letsMakeBtn.classList.add('btn-shake-incorrect');
+          return;
+        }
         acquireRecipe(activeRecipePage);
+        if (currentCustomerState === CustomerState.LOOKUP) {
+          currentCustomerState = CustomerState.INGREDIENTS;
+          updateObjective();
+          checkIngredientsCollected();
+        }
       }
     };
   }
@@ -4111,10 +4338,12 @@ function renderBookPage() {
 
 function acquireRecipe(page) {
   const pageNum = parseInt(page);
-  if (!acquiredRecipes.includes(pageNum)) {
-    acquiredRecipes.push(pageNum);
-    acquiredRecipes.sort((a, b) => a - b);
+  const targetPage = ailmentToRecipePage[activeAilmentType];
+  if (targetPage && pageNum !== targetPage) {
+    return;
   }
+  // Only one recipe can be acquired at a time
+  acquiredRecipes = [pageNum];
   renderBookPage();
   renderAcquiredRecipes();
   if (document.getElementById('manuscript-ui') && !document.getElementById('manuscript-ui').classList.contains('hidden')) {
@@ -4123,37 +4352,32 @@ function acquireRecipe(page) {
 }
 
 function unacquireRecipe(page) {
-  const pageNum = parseInt(page);
-  const index = acquiredRecipes.indexOf(pageNum);
-  if (index > -1) {
-    acquiredRecipes.splice(index, 1);
-  }
+  acquiredRecipes = [];
   renderBookPage();
   renderAcquiredRecipes();
   if (document.getElementById('manuscript-ui') && !document.getElementById('manuscript-ui').classList.contains('hidden')) {
-    if (acquiredRecipes.length > 0) {
-      activeRecipePage = acquiredRecipes[0];
-      renderManuscriptPage();
-    } else {
-      closeManuscriptView();
-    }
+    closeManuscriptView();
   }
 }
 
 function renderAcquiredRecipes() {
   const panel = document.getElementById('acquired-recipes-container');
+  if (!panel) return;
   panel.innerHTML = '';
+  if (acquiredRecipes.length === 0) return;
+
   acquiredRecipes.forEach(page => {
     const recipe = recipes[page];
+    if (!recipe) return;
     const badge = document.createElement('div');
     badge.className = 'acquired-recipe-badge';
     badge.setAttribute('data-tooltip', recipe.title);
-    
+
     // Roman Numeral corresponding to volume / page number
     const romanNumerals = { 1: "I", 2: "II", 3: "III" };
     const roman = romanNumerals[page] || page;
-    
-    // SVG book outline with Volume label overlay
+
+    // Crisp book SVG icon with Roman volume numeral (no emojis)
     badge.innerHTML = `
       <svg class="recipe-badge-svg" viewBox="0 0 24 24" fill="none" stroke="#F5EBD0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 36px; height: 36px;">
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
@@ -4161,7 +4385,7 @@ function renderAcquiredRecipes() {
       </svg>
       <span class="badge-num">${roman}</span>
     `;
-    
+
     badge.addEventListener('click', (e) => {
       e.stopPropagation();
       openManuscriptView(page);
@@ -4187,7 +4411,7 @@ function renderManuscriptPage() {
   const pageNum = parseInt(activeRecipePage) || 1;
   const recipe = recipes[pageNum] || recipes[1];
   const isAcquired = acquiredRecipes.includes(pageNum);
-  
+
   const container = document.getElementById('manuscript-page-content');
   if (!container) return;
 
@@ -4220,9 +4444,9 @@ function renderManuscriptPage() {
     <h4 class="recipe-section-title">Ingredients</h4>
     <ul class="recipe-ingredients-list">
       ${recipe.ingredients.map(ing => {
-        const isPresent = isIngredientInInventory(ing);
-        return `<li style="display: flex; align-items: center; gap: 8px;">${ing} ${isPresent ? '<span class="ing-check" style="font-size: 1.2rem;">✅</span>' : ''}</li>`;
-      }).join('')}
+    const isPresent = isIngredientInInventory(ing);
+    return `<li style="display: flex; align-items: center; gap: 8px;">${ing} ${isPresent ? '<span class="ing-check" style="font-size: 1.2rem;">✅</span>' : ''}</li>`;
+  }).join('')}
     </ul>
     
     <h4 class="recipe-section-title">Preparation Steps</h4>
@@ -4282,6 +4506,15 @@ function initBookUIEvents() {
   const manuscriptOverlayBg = document.querySelector('#manuscript-ui .book-overlay-bg');
   if (manuscriptOverlayBg) {
     manuscriptOverlayBg.addEventListener('click', closeManuscriptView);
+  }
+
+  // Dialogue click / tap listeners
+  if (dialogueUI) {
+    dialogueUI.addEventListener('click', advanceDialogue);
+    dialogueUI.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+      advanceDialogue();
+    });
   }
 }
 
