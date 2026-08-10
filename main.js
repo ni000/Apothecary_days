@@ -1264,6 +1264,10 @@ function getPotionColorMap(liquidColor) {
 const plantImage = new Image();
 plantImage.src = 'plant.png';
 
+// Load custom counter bonsai plant image
+const bonsaiImage = new Image();
+bonsaiImage.src = 'bonsai.png';
+
 // Load custom corner snake plant image
 const snakePlantImage = new Image();
 snakePlantImage.src = 'snake_plant.png';
@@ -1326,6 +1330,10 @@ potLeafyImage.src = 'pot_leafy.png';
 // Load custom vine image
 const vineImage = new Image();
 vineImage.src = 'vine.png';
+
+// Load custom window landscape scenery image (mountains, trees, river, sunset)
+const windowSceneryImage = new Image();
+windowSceneryImage.src = 'window_scenery.png';
 
 // Load custom worktable close-up image
 const tableCloseupImage = new Image();
@@ -1411,20 +1419,19 @@ const npc = {
 };
 
 // Light Sources Definitions
-const shelfY1 = 160;
-const shelfY2 = 280;
-const shelfY3 = 400;
+const shelfY1 = 138;
+const shelfY2 = 248;
 const counterY = 520;
 
 const lightSources = [
-  { type: 'lantern', x: 180 + 36, y: shelfY1 - 88 + 44, radius: 70 },
-  { type: 'lantern', x: 560 + 36, y: shelfY2 - 88 + 44, radius: 70 },
-  { type: 'lantern', x: 660 + 36, y: shelfY3 - 88 + 44, radius: 70 },
-  { type: 'lantern', x: 1660 + 36, y: shelfY1 - 88 + 44, radius: 70 },
-  { type: 'lantern', x: 1200 + 36, y: shelfY2 - 88 + 44, radius: 70 },
-  { type: 'lantern', x: 1540 + 36, y: shelfY3 - 88 + 44, radius: 70 },
-  { type: 'candle', x: 300 + 28, y: counterY - 88 + 20, radius: 50 },
-  { type: 'candle', x: 1300 + 28, y: counterY - 88 + 20, radius: 50 }
+  { type: 'lantern', x: 250, y: shelfY1 - 40, radius: 75 },
+  { type: 'lantern', x: 470, y: shelfY2 - 40, radius: 75 },
+  { type: 'lantern', x: 770, y: 390, radius: 85 },
+  { type: 'lantern', x: 1600, y: shelfY1 - 40, radius: 75 },
+  { type: 'lantern', x: 1210, y: shelfY2 - 40, radius: 75 },
+  { type: 'lantern', x: 1150, y: 390, radius: 85 },
+  { type: 'candle', x: 300, y: counterY - 60, radius: 55 },
+  { type: 'candle', x: 1300, y: counterY - 60, radius: 55 }
 ];
 
 // Coins & Currency with Simulator-style Satisfying Animation
@@ -3122,97 +3129,17 @@ function drawBrushRestAndInk(ctx, x, y, width = 64, height = 36) {
   ctx.fill();
 }
 
-// 14. Potted Miniature Chinese Bonsai / Plum Blossom in Hexagonal Celadon Pot
+// 14. Potted Miniature Bonsai in Celadon Pot (Counter Plant)
 function drawChineseBonsai(ctx, x, y, width = 110, height = 120) {
-  const startX = x - width / 2;
-  const startY = y - height;
-
-  // Drop shadow
-  ctx.fillStyle = 'rgba(29, 18, 11, 0.45)';
+  // Drop shadow on countertop
+  ctx.fillStyle = 'rgba(20, 11, 7, 0.45)';
   ctx.beginPath();
-  ctx.ellipse(x, y, width * 0.45, 6, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + 2, width * 0.45, 6, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Hexagonal Celadon Planter (Base Y: y - 36 to y)
-  const potY = y - 34;
-  ctx.fillStyle = '#1D120B';
-  ctx.fillRect(startX + width * 0.15, potY, width * 0.7, 34);
-
-  ctx.fillStyle = '#6B9E8A'; // Celadon glaze body
-  ctx.fillRect(startX + width * 0.17, potY + 2, width * 0.66, 30);
-
-  // Planter Rim
-  ctx.fillStyle = '#9EC7B5';
-  ctx.fillRect(startX + width * 0.12, potY, width * 0.76, 6);
-  ctx.fillStyle = '#4A7A68'; // Planter shadow panel
-  ctx.fillRect(startX + width * 0.55, potY + 6, width * 0.26, 24);
-
-  // Dark Soil
-  ctx.fillStyle = '#3A2416';
-  ctx.fillRect(startX + width * 0.18, potY + 3, width * 0.64, 4);
-
-  // Gnarled Bonsai Trunk & Branches
-  ctx.strokeStyle = '#1D120B';
-  ctx.lineWidth = 8;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(x, potY + 2);
-  ctx.quadraticCurveTo(x - 16, startY + height * 0.5, x - 6, startY + height * 0.35);
-  ctx.quadraticCurveTo(x + 14, startY + height * 0.25, x + 24, startY + height * 0.15);
-  ctx.moveTo(x - 6, startY + height * 0.35);
-  ctx.quadraticCurveTo(x - 24, startY + height * 0.28, x - 32, startY + height * 0.2);
-  ctx.stroke();
-
-  // Bark Fill (Dark Aged Timber)
-  ctx.strokeStyle = '#5A3825';
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.moveTo(x, potY + 2);
-  ctx.quadraticCurveTo(x - 16, startY + height * 0.5, x - 6, startY + height * 0.35);
-  ctx.quadraticCurveTo(x + 14, startY + height * 0.25, x + 24, startY + height * 0.15);
-  ctx.moveTo(x - 6, startY + height * 0.35);
-  ctx.quadraticCurveTo(x - 24, startY + height * 0.28, x - 32, startY + height * 0.2);
-  ctx.stroke();
-
-  // Jade Pine Clusters & Plum Blossom Petals
-  const foliageCenters = [
-    { cx: x - 32, cy: startY + height * 0.18, r: 18 },
-    { cx: x - 6, cy: startY + height * 0.22, r: 16 },
-    { cx: x + 24, cy: startY + height * 0.14, r: 20 },
-    { cx: x + 8, cy: startY + height * 0.08, r: 14 }
-  ];
-
-  foliageCenters.forEach(fc => {
-    // Dark outline cluster
-    ctx.fillStyle = '#1D120B';
-    ctx.beginPath();
-    ctx.arc(fc.cx, fc.cy, fc.r, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Lush Jade Green Pine Foliage
-    ctx.fillStyle = '#3F6B52';
-    ctx.beginPath();
-    ctx.arc(fc.cx, fc.cy, fc.r - 2, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#6BA382';
-    ctx.beginPath();
-    ctx.arc(fc.cx - 3, fc.cy - 3, fc.r * 0.6, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Plum Blossom Petals (Crimson & Coral)
-    ctx.fillStyle = '#C43838';
-    ctx.beginPath();
-    ctx.arc(fc.cx - 5, fc.cy + 4, 3.5, 0, Math.PI * 2);
-    ctx.arc(fc.cx + 6, fc.cy - 4, 3.5, 0, Math.PI * 2);
-    ctx.arc(fc.cx + 2, fc.cy + 6, 3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Blossom Center Gold Stamen
-    ctx.fillStyle = '#FFE599';
-    ctx.fillRect(fc.cx - 5.5, fc.cy + 3.5, 1.5, 1.5);
-    ctx.fillRect(fc.cx + 5.5, fc.cy - 4.5, 1.5, 1.5);
-  });
+  if (bonsaiImage.complete && bonsaiImage.naturalWidth > 0) {
+    ctx.drawImage(bonsaiImage, x - width / 2, y - height, width, height);
+  }
 }
 
 // 15. Hanging Dried Herb Braid (Ginseng, Licorice, Safflower, Garlic/Ginger)
@@ -3291,6 +3218,76 @@ function drawHangingHerbalBraid(ctx, x, y, length = 180, type = 'ginseng') {
   }
 }
 
+// 15.5. Subtle Hanging Dried Medicinal Herbs (Sparse on Walls)
+function drawSubtleHangingHerb(ctx, x, y, type = 'roots') {
+  // Small Dark Wooden Peg
+  ctx.fillStyle = '#1D120B';
+  ctx.fillRect(x - 3, y - 3, 6, 6);
+  ctx.fillStyle = '#5A3825';
+  ctx.fillRect(x - 2, y - 2, 4, 4);
+
+  // Thin Hemp String
+  ctx.strokeStyle = '#8C6239';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x, y + 12);
+  ctx.stroke();
+
+  if (type === 'roots') {
+    ctx.strokeStyle = '#1D120B';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y + 12);
+    ctx.lineTo(x - 4, y + 36);
+    ctx.moveTo(x, y + 12);
+    ctx.lineTo(x + 3, y + 42);
+    ctx.moveTo(x, y + 12);
+    ctx.lineTo(x + 6, y + 32);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#D8BA8C';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(x, y + 12);
+    ctx.lineTo(x - 4, y + 36);
+    ctx.moveTo(x, y + 12);
+    ctx.lineTo(x + 3, y + 42);
+    ctx.moveTo(x, y + 12);
+    ctx.lineTo(x + 6, y + 32);
+    ctx.stroke();
+
+    ctx.fillStyle = '#8B2626';
+    ctx.fillRect(x - 3, y + 14, 6, 2.5);
+  } else if (type === 'flowers') {
+    ctx.fillStyle = '#1D120B';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 24, 7, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#C45228';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 24, 5.5, 8.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#8B2626';
+    ctx.fillRect(x - 4, y + 14, 8, 2.5);
+  } else {
+    ctx.fillStyle = '#1D120B';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 22, 6, 9, 0.1, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#5B7A4E';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 22, 4.5, 7.5, 0.1, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#8B2626';
+    ctx.fillRect(x - 3, y + 14, 6, 2.5);
+  }
+}
+
 // 16. Hundred-Drawer Apothecary Cabinet (Baizigui 百子柜)
 function drawBaiziguiCabinet(ctx, x1, x2) {
   const floorY = CANVAS_HEIGHT * 0.6; // Y = 648
@@ -3324,16 +3321,18 @@ function drawBaiziguiCabinet(ctx, x1, x2) {
   ctx.fillRect(x1 + 4, 4, 8, 8);
   ctx.fillRect(x2 - 12, 4, 8, 8);
 
-  // Horizontal Display Shelves (Y = 160, Y = 280, Y = 400)
-  const shelfHeights = [160, 280, 400];
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 2 UPPER DISPLAY SHELVES (Y = 138, Y = 248)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const shelfHeights = [138, 248];
   shelfHeights.forEach(sy => {
     // Shelf Base
     ctx.fillStyle = '#3A2015';
-    ctx.fillRect(x1, sy, cabinetWidth, 22);
+    ctx.fillRect(x1, sy, cabinetWidth, 20);
 
     ctx.strokeStyle = '#180D08';
     ctx.lineWidth = 3;
-    ctx.strokeRect(x1, sy, cabinetWidth, 22);
+    ctx.strokeRect(x1, sy, cabinetWidth, 20);
 
     // Warm Aged Rosewood Highlight
     ctx.fillStyle = '#87553A';
@@ -3341,15 +3340,16 @@ function drawBaiziguiCabinet(ctx, x1, x2) {
 
     // Shadow crevice under shelf
     ctx.fillStyle = '#180D08';
-    ctx.fillRect(x1 + 24, sy + 22, cabinetWidth - 48, 6);
+    ctx.fillRect(x1 + 24, sy + 20, cabinetWidth - 48, 6);
   });
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // HUNDRED-DRAWER MEDICINE DRAWERS GRID (Y = 422 to 648)
+  // 5 COMPLETE ROWS OF SQUARE MEDICINE DRAWERS (Y = 360 to 642)
+  // (Directly ABOVE previous drawers, in back storage area)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  const drawerStartY = 426;
+  const drawerStartY = 360;
   const drawerEndY = floorY - 6;
-  const gridRows = 4;
+  const gridRows = 5; // 5 Full Horizontal Rows of Square Drawers!
   const gridCols = 8;
   const gridW = cabinetWidth - 48;
   const gridH = drawerEndY - drawerStartY;
@@ -3381,9 +3381,9 @@ function drawBaiziguiCabinet(ctx, x1, x2) {
 
       // Aged Paper Medicine Label Slip (Yao Qian 药签) on Upper Drawer Face
       const labelW = dw * 0.44;
-      const labelH = dh * 0.48;
+      const labelH = dh * 0.44;
       const lx = dx + (dw - labelW) / 2;
-      const ly = dy + 4;
+      const ly = dy + 3.5;
 
       ctx.fillStyle = '#F2E8D5'; // Parchment
       ctx.fillRect(lx, ly, labelW, labelH);
@@ -3392,162 +3392,186 @@ function drawBaiziguiCabinet(ctx, x1, x2) {
 
       // Micro-pixel calligraphy strokes
       ctx.fillStyle = '#2A1810';
-      ctx.fillRect(lx + 2, ly + 4, labelW - 4, 1.5);
-      ctx.fillRect(lx + 3, ly + 7, labelW - 6, 1.5);
-      ctx.fillRect(lx + 2, ly + 10, labelW - 4, 1.5);
+      ctx.fillRect(lx + 2, ly + 4, labelW - 4, 1.2);
+      ctx.fillRect(lx + 3, ly + 7, labelW - 6, 1.2);
+      ctx.fillRect(lx + 2, ly + 10, labelW - 4, 1.2);
 
       // Antique Brass Drop Handle / Ring Pull (Lower Drawer Face)
       const hx = dx + dw / 2;
-      const hy = dy + dh - 10;
+      const hy = dy + dh - 9;
       ctx.fillStyle = '#DEB34A';
-      ctx.fillRect(hx - 3, hy - 3, 6, 3); // Base plate
+      ctx.fillRect(hx - 3, hy - 3, 6, 2.5); // Base plate
       ctx.strokeStyle = '#DEB34A';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
-      ctx.arc(hx, hy + 2, 4, 0, Math.PI);
+      ctx.arc(hx, hy + 2, 3.5, 0, Math.PI);
       ctx.stroke();
     }
   }
 }
 
-// 17. Traditional Chinese Lattice Moon-Gate Window & Imperial Courtyard
+// 16.5. Traditional Chinese Hanging Calligraphy Scroll (Flanking Central Window)
+function drawChineseCalligraphyScroll(ctx, x, y, width = 52, height = 280, titleChars = ["日","々","是","好","日"]) {
+  const startX = x - width / 2;
+
+  // Drop shadow
+  ctx.fillStyle = 'rgba(20, 11, 7, 0.4)';
+  ctx.fillRect(startX + 3, y + 3, width, height);
+
+  // Outer Crimson/Brocade Silk Mounting Border
+  ctx.fillStyle = '#8B2626';
+  ctx.fillRect(startX, y, width, height);
+
+  // Gold Brocade Trim
+  ctx.strokeStyle = '#C99B3B';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(startX + 3, y + 10, width - 6, height - 20);
+
+  // Inner Cream Mulberry Silk Paper Center
+  const innerW = width - 14;
+  const innerH = height - 32;
+  const innerX = startX + 7;
+  const innerY = y + 16;
+  ctx.fillStyle = '#F2E8D5';
+  ctx.fillRect(innerX, innerY, innerW, innerH);
+
+  // Traditional Black Ink Calligraphy Characters (Vertical)
+  ctx.fillStyle = '#1D120B';
+  ctx.font = 'bold 22px "EB Garamond", serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const charSpacing = innerH / (titleChars.length + 1);
+  titleChars.forEach((ch, idx) => {
+    ctx.fillText(ch, startX + width / 2, innerY + (idx + 1) * charSpacing - 4);
+  });
+
+  // Cinnabar Red Seal Stamp at Bottom
+  ctx.fillStyle = '#A82828';
+  ctx.fillRect(startX + width / 2 - 7, innerY + innerH - 22, 14, 14);
+  ctx.fillStyle = '#F2E8D5';
+  ctx.fillRect(startX + width / 2 - 4, innerY + innerH - 19, 8, 8);
+
+  // Dark Rosewood Upper and Lower Mounting Rollers
+  ctx.fillStyle = '#2A1810';
+  ctx.fillRect(startX - 5, y - 4, width + 10, 8);
+  ctx.fillRect(startX - 7, y + height - 4, width + 14, 10);
+  ctx.fillStyle = '#5A3825';
+  ctx.fillRect(startX - 5, y - 2, width + 10, 3);
+  ctx.fillRect(startX - 7, y + height - 2, width + 14, 3);
+
+  // Red Suspension Ribbon Cord at Top
+  ctx.strokeStyle = '#8B2626';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(startX + 4, y - 4);
+  ctx.lineTo(startX + width / 2, y - 22);
+  ctx.lineTo(startX + width - 4, y - 4);
+  ctx.stroke();
+
+  // Dark Mounting Peg on Wall
+  ctx.fillStyle = '#1D120B';
+  ctx.fillRect(startX + width / 2 - 3, y - 25, 6, 6);
+  ctx.fillStyle = '#5A3825';
+  ctx.fillRect(startX + width / 2 - 2, y - 24, 4, 4);
+}
+
+// 17. Mountain Sunset & River Landscape Scenery Window
 function drawChineseLatticeWindow(ctx) {
-  const winX = 800;
-  const winY = 60;
-  const winW = 320;
-  const winH = 460;
+  const winX = 770;
+  const winY = 40;
+  const winW = 380;
+  const winH = 470;
   const sillY = 496;
+  const archCenterX = winX + winW / 2; // 960
+  const archCenterY = 225;
+  const archRadius = winW / 2; // 190
 
   ctx.save();
 
-  // 1. Clip to Arched Moon Window Shape
+  // 1. Clip to Arched Moon Window Shape (Landscape strictly contained within window opening)
   ctx.beginPath();
   ctx.moveTo(winX, sillY);
-  ctx.lineTo(winX, 220);
-  ctx.arc(winX + winW / 2, 220, winW / 2, Math.PI, 0, false);
+  ctx.lineTo(winX, archCenterY);
+  ctx.arc(archCenterX, archCenterY, archRadius, Math.PI, 0, false);
   ctx.lineTo(winX + winW, sillY);
   ctx.closePath();
   ctx.clip();
 
-  // 2. Courtyard Sky & Atmospheric Light Gradient
-  const skyGrad = ctx.createLinearGradient(960, winY, 960, sillY);
-  skyGrad.addColorStop(0, '#E8C5A8'); // Soft warm peach morning sky
-  skyGrad.addColorStop(0.45, '#F5E3CE'); // Misty golden light
-  skyGrad.addColorStop(0.8, '#D8E8D5');  // Jade garden ambient
-  skyGrad.addColorStop(1.0, '#BFD4BD');
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(winX, winY, winW, winH);
-
-  // 3. Distant Ancient Chinese Palace Tiled Roof with Upturned Flying Eaves (Feiyan 飞檐)
-  ctx.fillStyle = '#3D5452'; // Distant dark teal/slate glazed tiles
-  ctx.beginPath();
-  // Main curved roof ridge
-  ctx.moveTo(winX + 20, 360);
-  ctx.quadraticCurveTo(winX + 80, 310, winX + 160, 305);
-  ctx.quadraticCurveTo(winX + 240, 310, winX + 300, 360);
-  // Upturned flying eaves tip
-  ctx.lineTo(winX + 315, 345);
-  ctx.quadraticCurveTo(winX + 240, 290, winX + 160, 285);
-  ctx.quadraticCurveTo(winX + 80, 290, winX + 5, 345);
-  ctx.closePath();
-  ctx.fill();
-
-  // Imperial Roof Tile Ridges
-  ctx.strokeStyle = '#567572';
-  ctx.lineWidth = 2;
-  for (let rx = winX + 40; rx < winX + 280; rx += 18) {
-    ctx.beginPath();
-    ctx.moveTo(rx, 350);
-    ctx.lineTo(rx - 8, 300);
-    ctx.stroke();
+  // 2. Draw Landscape Scenery Image (Mountains, Trees, River, Sunset clearly visible with natural aspect ratio)
+  if (windowSceneryImage.complete && windowSceneryImage.naturalWidth > 0) {
+    const drawW = winW; // 380
+    const imgAspect = windowSceneryImage.naturalHeight / windowSceneryImage.naturalWidth; // 1024 / 681 ≈ 1.5036
+    const drawH = drawW * imgAspect; // ~571px
+    const drawX = winX; // 770
+    // Position so golden sunset clouds at top, majestic mountain peaks in upper-mid arch, pine trees at sides, and glowing river reflections leading down to the sill
+    const drawY = 20;
+    ctx.drawImage(windowSceneryImage, drawX, drawY, drawW, drawH);
+  } else {
+    // Fallback sky & mountain gradient
+    const skyGrad = ctx.createLinearGradient(archCenterX, winY, archCenterX, sillY);
+    skyGrad.addColorStop(0, '#E8B692');
+    skyGrad.addColorStop(0.3, '#F7D0A8');
+    skyGrad.addColorStop(0.65, '#FFEAD0');
+    skyGrad.addColorStop(1.0, '#EAD7C2');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(winX, winY, winW, winH);
   }
 
-  // 4. Layered Bamboo Groves in the Imperial Courtyard
-  const bambooStalks = [
-    { x: winX + 45, h: 420, w: 7, color: '#5B7A3E' },
-    { x: winX + 75, h: 450, w: 8, color: '#4E6B34' },
-    { x: winX + 115, h: 390, w: 6, color: '#6A8E49' },
-    { x: winX + 210, h: 430, w: 7, color: '#5B7A3E' },
-    { x: winX + 255, h: 460, w: 9, color: '#4E6B34' },
-    { x: winX + 285, h: 400, w: 6, color: '#6A8E49' }
-  ];
-
-  bambooStalks.forEach(b => {
-    // Bamboo stalk
-    ctx.fillStyle = b.color;
-    ctx.fillRect(b.x, sillY - b.h, b.w, b.h);
-
-    // Bamboo node rings
-    ctx.fillStyle = '#364B22';
-    for (let ny = sillY - 30; ny > sillY - b.h; ny -= 45) {
-      ctx.fillRect(b.x - 1, ny, b.w + 2, 3);
-    }
-
-    // Bamboo leaves (pointed jade green clusters)
-    ctx.fillStyle = '#557A3C';
-    for (let ly = sillY - 60; ly > sillY - b.h; ly -= 40) {
-      const dir = ly % 80 === 0 ? 1 : -1;
-      // Leaf 1
-      ctx.beginPath();
-      ctx.moveTo(b.x + b.w / 2, ly);
-      ctx.quadraticCurveTo(b.x + dir * 25, ly - 8, b.x + dir * 35, ly + 6);
-      ctx.quadraticCurveTo(b.x + dir * 18, ly + 4, b.x + b.w / 2, ly);
-      ctx.fill();
-
-      // Leaf 2
-      ctx.beginPath();
-      ctx.moveTo(b.x + b.w / 2, ly + 8);
-      ctx.quadraticCurveTo(b.x + dir * 30, ly + 2, b.x + dir * 42, ly + 18);
-      ctx.quadraticCurveTo(b.x + dir * 20, ly + 14, b.x + b.w / 2, ly + 8);
-      ctx.fill();
-    }
-  });
-
-  // 5. Traditional Chinese Geometric Lattice Fretwork (Wan-fret & Ice-ray)
+  // 3. TRADITIONAL CHINESE LATTICE FRETWORK (Drawn visually IN FRONT of landscape image)
   ctx.strokeStyle = '#2A1810';
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 4.5;
 
-  // Major vertical & horizontal lattice dividers
+  // Major vertical & horizontal lattice bars
   ctx.beginPath();
-  ctx.moveTo(winX + winW / 2, winY);
-  ctx.lineTo(winX + winW / 2, sillY);
-  ctx.moveTo(winX, 220);
-  ctx.lineTo(winX + winW, 220);
+  // Central Vertical Mullion
+  ctx.moveTo(archCenterX, winY);
+  ctx.lineTo(archCenterX, sillY);
+  // Quarter Vertical Mullions
+  ctx.moveTo(winX + winW * 0.25, winY + 50);
+  ctx.lineTo(winX + winW * 0.25, sillY);
+  ctx.moveTo(winX + winW * 0.75, winY + 50);
+  ctx.lineTo(winX + winW * 0.75, sillY);
+
+  // Horizontal Transoms
+  ctx.moveTo(winX, 225);
+  ctx.lineTo(winX + winW, 225);
   ctx.moveTo(winX, 360);
   ctx.lineTo(winX + winW, 360);
   ctx.stroke();
 
+  // Inner Concentric Moon Lattice Arch
+  ctx.beginPath();
+  ctx.arc(archCenterX, archCenterY, archRadius - 55, Math.PI, 0, false);
+  ctx.stroke();
+
   // Geometric Lattice Quadrants (Ice-ray diagonal frets)
   ctx.strokeStyle = '#44281B';
-  ctx.lineWidth = 3.5;
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  // Upper arch diagonals
-  ctx.moveTo(winX + 40, 220);
-  ctx.lineTo(winX + winW / 2, 120);
-  ctx.lineTo(winX + winW - 40, 220);
-  // Mid fretwork
+  // Mid fretwork diamonds
   ctx.moveTo(winX, 290);
-  ctx.lineTo(winX + 70, 220);
-  ctx.lineTo(winX + 140, 290);
-  ctx.lineTo(winX + 70, 360);
-  ctx.lineTo(winX, 290);
+  ctx.lineTo(winX + winW * 0.25, 225);
+  ctx.lineTo(winX + winW * 0.5, 290);
+  ctx.lineTo(winX + winW * 0.25, 360);
+  ctx.closePath();
 
   ctx.moveTo(winX + winW, 290);
-  ctx.lineTo(winX + winW - 70, 220);
-  ctx.lineTo(winX + winW - 140, 290);
-  ctx.lineTo(winX + winW - 70, 360);
-  ctx.lineTo(winX + winW, 290);
+  ctx.lineTo(winX + winW * 0.75, 225);
+  ctx.lineTo(winX + winW * 0.5, 290);
+  ctx.lineTo(winX + winW * 0.75, 360);
+  ctx.closePath();
   ctx.stroke();
 
   ctx.restore();
 
-  // 6. Heavy Dark Aged Timber Window Frame Outline & Highlights
+  // 4. HEAVY DARK AGED TIMBER WINDOW FRAME & HIGHLIGHTS
   ctx.strokeStyle = '#1D120B';
   ctx.lineWidth = 16;
   ctx.beginPath();
   ctx.moveTo(winX, sillY);
-  ctx.lineTo(winX, 220);
-  ctx.arc(winX + winW / 2, 220, winW / 2, Math.PI, 0, false);
+  ctx.lineTo(winX, archCenterY);
+  ctx.arc(archCenterX, archCenterY, archRadius, Math.PI, 0, false);
   ctx.lineTo(winX + winW, sillY);
   ctx.stroke();
 
@@ -3555,107 +3579,166 @@ function drawChineseLatticeWindow(ctx) {
   ctx.lineWidth = 8;
   ctx.beginPath();
   ctx.moveTo(winX + 4, sillY);
-  ctx.lineTo(winX + 4, 220);
-  ctx.arc(winX + winW / 2, 220, winW / 2 - 4, Math.PI, 0, false);
+  ctx.lineTo(winX + 4, archCenterY);
+  ctx.arc(archCenterX, archCenterY, archRadius - 4, Math.PI, 0, false);
   ctx.lineTo(winX + winW - 4, sillY);
   ctx.stroke();
 
-  // 7. Polished Dark Aged Timber Windowsill (Y = 496, height = 24)
+  // Inner Gold/Brass Trim Line
+  ctx.strokeStyle = '#C99B3B';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(winX + 8, sillY);
+  ctx.lineTo(winX + 8, archCenterY);
+  ctx.arc(archCenterX, archCenterY, archRadius - 8, Math.PI, 0, false);
+  ctx.lineTo(winX + winW - 8, sillY);
+  ctx.stroke();
+
+  // 5. POLISHED DARK AGED TIMBER WINDOWSILL (Y = 496, height = 24)
   ctx.fillStyle = '#3A2015';
   ctx.fillRect(winX - 20, sillY, winW + 40, 24);
   ctx.strokeStyle = '#1D120B';
   ctx.lineWidth = 4;
   ctx.strokeRect(winX - 20, sillY, winW + 40, 24);
-  ctx.fillStyle = '#87553A'; // Windowsill top highlight
+  // Windowsill top warm golden highlight catching natural window light
+  ctx.fillStyle = '#A3724B';
   ctx.fillRect(winX - 20, sillY + 2, winW + 40, 4);
-
-  // 8. Windowsill Props (Celadon Pot + Porcelain Plum Blossom Vase + Bamboo Roll)
-  drawCeladonJar(ctx, winX + 40, sillY, 44, 52, true);
-  drawQinghuaPorcelainJar(ctx, winX + 130, sillY, 46, 56);
-  drawBambooCanister(ctx, winX + 270, sillY, 34, 58);
 }
 
-// 18. Imperial Blue-and-White Porcelain Jardinière (Corner Planters)
-function drawImperialCornerPlanter(ctx, x, y, width = 352, height = 352) {
-  const potW = 160;
-  const potH = 90;
-  const potX = x + (width - potW) / 2;
-  const potY = y + height - potH - 12;
+// 17.5. Subtle Natural Light Reflection / Spill from Window into Room
+function drawWindowSunlight(ctx) {
+  ctx.save();
 
-  // Carved Dark Rosewood Pedestal Stand
-  ctx.fillStyle = '#1D120B';
-  ctx.fillRect(potX - 10, y + height - 16, potW + 20, 16);
-  ctx.fillStyle = '#44281B';
-  ctx.fillRect(potX - 6, y + height - 14, potW + 12, 10);
-  ctx.fillStyle = '#C99B3B'; // Gold pedestal feet
-  ctx.fillRect(potX - 8, y + height - 8, 12, 8);
-  ctx.fillRect(potX + potW - 4, y + height - 8, 12, 8);
+  // 1. Soft Warm Light Spill onto Floor & Rug directly in front of window (Y = 660 to 770)
+  // Subtle and organic, fading as it travels into the room
+  const floorLight = ctx.createRadialGradient(960, 710, 40, 960, 710, 280);
+  floorLight.addColorStop(0, 'rgba(255, 220, 130, 0.10)');
+  floorLight.addColorStop(0.5, 'rgba(245, 195, 110, 0.05)');
+  floorLight.addColorStop(1, 'rgba(230, 170, 70, 0)');
+  ctx.fillStyle = floorLight;
+  ctx.beginPath();
+  ctx.ellipse(960, 710, 280, 75, 0, 0, Math.PI * 2);
+  ctx.fill();
 
-  // Porcelain Jardinière Body (Blue and White Qinghua)
-  ctx.fillStyle = '#1D120B';
-  ctx.fillRect(potX, potY, potW, potH);
+  // 2. Subtle Wood Side Edge Highlights on Left & Right Baizigui Cabinets facing the window
+  // Left Cabinet inner pillar (X = 736 to 740, Y = 50 to 520)
+  const leftEdgeGrad = ctx.createLinearGradient(740, 0, 740, 520);
+  leftEdgeGrad.addColorStop(0, 'rgba(255, 225, 140, 0.02)');
+  leftEdgeGrad.addColorStop(0.4, 'rgba(255, 220, 135, 0.14)');
+  leftEdgeGrad.addColorStop(0.9, 'rgba(255, 210, 120, 0.04)');
+  ctx.fillStyle = leftEdgeGrad;
+  ctx.fillRect(736, 50, 4, 460);
 
-  ctx.fillStyle = '#EDF2F4'; // White porcelain
-  ctx.fillRect(potX + 4, potY + 4, potW - 8, potH - 8);
+  // Right Cabinet inner pillar (X = 1180 to 1184, Y = 50 to 520)
+  const rightEdgeGrad = ctx.createLinearGradient(1180, 0, 1180, 520);
+  rightEdgeGrad.addColorStop(0, 'rgba(255, 225, 140, 0.02)');
+  rightEdgeGrad.addColorStop(0.4, 'rgba(255, 220, 135, 0.14)');
+  rightEdgeGrad.addColorStop(0.9, 'rgba(255, 210, 120, 0.04)');
+  ctx.fillStyle = rightEdgeGrad;
+  ctx.fillRect(1180, 50, 4, 460);
 
-  // Blue Cobalt Imperial Dragon / Floral Motifs
-  ctx.fillStyle = '#224870';
-  ctx.fillRect(potX + 4, potY + 4, potW - 8, 8); // Rim border
-  ctx.fillRect(potX + 20, potY + 24, potW - 40, 10);
-  ctx.fillRect(potX + 35, potY + 42, potW - 70, 16);
-  ctx.fillRect(potX + 4, potY + potH - 12, potW - 8, 6);
+  // 3. Subtle Warm Edge on Flanking Scrolls
+  ctx.fillStyle = 'rgba(255, 225, 140, 0.08)';
+  ctx.fillRect(770 + 48, 80, 4, 280);
+  ctx.fillRect(1150, 80, 4, 280);
 
-  // Porcelain highlights & shading
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(potX + 8, potY + 12, 12, potH - 24);
-  ctx.fillStyle = '#CAD5D8';
-  ctx.fillRect(potX + potW - 20, potY + 12, 12, potH - 24);
+  ctx.restore();
+}
 
-  // Lush Sacred Bamboo (Nandina) & Medicinal Red Berries
-  const stems = [
-    { bx: potX + 40, tx: x + 60, h: 280 },
-    { bx: potX + 70, tx: x + 150, h: 320 },
-    { bx: potX + 90, tx: x + 200, h: 340 },
-    { bx: potX + 120, tx: x + 290, h: 290 }
+// 17.8. Green Hanging Banners on Counter (Left & Right Front Sides)
+function drawCounterBanners(ctx) {
+  const bannerW = 88;
+  const bannerH = 144;
+  const bannerY = counterY + 16; // 536, hangs from upper counter front
+
+  const bannerPositions = [
+    { x: 180, side: 'left' },   // Left banner
+    { x: 1652, side: 'right' }  // Right banner
   ];
 
-  stems.forEach(st => {
-    // Bamboo Stem
-    ctx.strokeStyle = '#1D120B';
-    ctx.lineWidth = 6;
+  bannerPositions.forEach(b => {
+    const bx = b.x;
+    const by = bannerY;
+
+    // Drop shadow behind fabric
+    ctx.fillStyle = 'rgba(20, 11, 7, 0.55)';
+    ctx.fillRect(bx + 4, by + 4, bannerW, bannerH);
+
+    // 1. Dark Forest Green Fabric Body
+    ctx.fillStyle = '#1B3D2F';
+    ctx.fillRect(bx, by, bannerW, bannerH);
+
+    // Inner subtle vertical cloth weave / fold shading
+    ctx.fillStyle = '#22533F';
+    ctx.fillRect(bx + 6, by + 6, bannerW - 12, bannerH - 12);
+    ctx.fillStyle = '#163327';
+    ctx.fillRect(bx + bannerW / 2 - 2, by + 6, 4, bannerH - 12);
+
+    // 2. Gold Decorative Border (Double gold piping)
+    ctx.strokeStyle = '#C99B3B'; // Imperial Gold
+    ctx.lineWidth = 3;
+    ctx.strokeRect(bx + 4, by + 4, bannerW - 8, bannerH - 8);
+
+    ctx.strokeStyle = '#DEB34A'; // Lighter gold inner line
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(bx + 8, by + 8, bannerW - 16, bannerH - 16);
+
+    // 3. Central Gold Ornamental Medallion (8-petal Imperial Lotus Crest)
+    const cx = bx + bannerW / 2;
+    const cy = by + bannerH / 2;
+    const r = 20;
+
+    // Outer Gold Emblem Circle
+    ctx.strokeStyle = '#DEB34A';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(st.bx, potY + 4);
-    ctx.quadraticCurveTo(st.bx + (st.tx - st.bx) * 0.5, potY - st.h * 0.5, st.tx, potY - st.h + 50);
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.strokeStyle = '#6E8A42';
-    ctx.lineWidth = 3.5;
+    // 8 Gold Petals
+    ctx.fillStyle = '#DEB34A';
+    for (let i = 0; i < 8; i++) {
+      const angle = (i * Math.PI) / 4;
+      const px = cx + Math.cos(angle) * (r * 0.65);
+      const py = cy + Math.sin(angle) * (r * 0.65);
+      ctx.beginPath();
+      ctx.arc(px, py, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Emblem Center Gold Core
+    ctx.fillStyle = '#FFE082';
     ctx.beginPath();
-    ctx.moveTo(st.bx, potY + 4);
-    ctx.quadraticCurveTo(st.bx + (st.tx - st.bx) * 0.5, potY - st.h * 0.5, st.tx, potY - st.h + 50);
-    ctx.stroke();
+    ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#1B3D2F';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Delicate Feathered Leaf Sprays
-    for (let ly = potY - 40; ly > potY - st.h + 60; ly -= 35) {
-      ctx.fillStyle = '#4D754B';
-      ctx.beginPath();
-      ctx.ellipse(st.tx + (ly % 20 === 0 ? 25 : -25), ly, 22, 7, (ly % 20 === 0 ? 0.35 : -0.35), 0, Math.PI * 2);
-      ctx.fill();
+    // Corner Gold Accents on banner
+    ctx.fillStyle = '#DEB34A';
+    ctx.fillRect(bx + 6, by + 6, 4, 4);
+    ctx.fillRect(bx + bannerW - 10, by + 6, 4, 4);
+    ctx.fillRect(bx + 6, by + bannerH - 10, 4, 4);
+    ctx.fillRect(bx + bannerW - 10, by + bannerH - 10, 4, 4);
 
-      ctx.fillStyle = '#78A86B';
-      ctx.beginPath();
-      ctx.ellipse(st.tx + (ly % 20 === 0 ? 22 : -22), ly - 2, 16, 4.5, (ly % 20 === 0 ? 0.35 : -0.35), 0, Math.PI * 2);
-      ctx.fill();
+    // Top Brass Mounting Bar / Clips at the counter lip
+    ctx.fillStyle = '#2A1810';
+    ctx.fillRect(bx - 3, by - 4, bannerW + 6, 6);
+    ctx.fillStyle = '#DEB34A';
+    ctx.fillRect(bx - 2, by - 3, bannerW + 4, 3);
+    // Brass mounting studs
+    ctx.fillStyle = '#FFE082';
+    ctx.fillRect(bx + 6, by - 4, 6, 5);
+    ctx.fillRect(bx + bannerW - 12, by - 4, 6, 5);
 
-      // Clusters of Sacred Bamboo Red Berries
-      ctx.fillStyle = '#C42828';
-      ctx.beginPath();
-      ctx.arc(st.tx + (ly % 20 === 0 ? 12 : -12), ly + 8, 4, 0, Math.PI * 2);
-      ctx.arc(st.tx + (ly % 20 === 0 ? 18 : -18), ly + 13, 3.5, 0, Math.PI * 2);
-      ctx.arc(st.tx + (ly % 20 === 0 ? 8 : -8), ly + 14, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#FFA8A8'; // Berry shine
-      ctx.fillRect(st.tx + (ly % 20 === 0 ? 11 : -13), ly + 7, 1.5, 1.5);
+    // Bottom Weighted Gold Hem Bar & Fringe
+    ctx.fillStyle = '#C99B3B';
+    ctx.fillRect(bx + 2, by + bannerH - 4, bannerW - 4, 4);
+    ctx.fillStyle = '#DEB34A';
+    for (let f = bx + 8; f < bx + bannerW - 8; f += 6) {
+      ctx.fillRect(f, by + bannerH, 3, 4);
     }
   });
 }
@@ -3786,199 +3869,62 @@ function drawTraditionalRug(ctx, x, y, width, height) {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SMALL TRADITIONAL MEDICINAL HERB POT
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-function drawSmallHerbPot(ctx, x, y, size = 48) {
-  const potW = size * 0.85;
-  const potH = size * 0.55;
-  const startX = x - potW / 2;
-  const startY = y - potH;
-
+// Small Corner Medicinal Herb Pots
+function drawSmallHerbPot(ctx, x, y, size = 40) {
+  const potW = size;
+  const potH = size * 0.7;
   // Shadow
-  ctx.fillStyle = 'rgba(29, 18, 11, 0.4)';
+  ctx.fillStyle = 'rgba(18, 10, 6, 0.4)';
   ctx.beginPath();
-  ctx.ellipse(x, y, potW * 0.5, 4, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + 4, potW * 0.6, 6, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Celadon / Terracotta Ceramic Pot
-  ctx.fillStyle = '#1D120B';
-  ctx.fillRect(startX, startY, potW, potH);
-
-  ctx.fillStyle = '#6B9E8A'; // Celadon glaze
-  ctx.fillRect(startX + 2, startY + 2, potW - 4, potH - 4);
-  ctx.fillStyle = '#9EC7B5'; // Rim highlight
-  ctx.fillRect(startX + 1, startY, potW - 2, 4);
-
-  // Dark Soil
-  ctx.fillStyle = '#3A2416';
-  ctx.fillRect(startX + 3, startY + 2, potW - 6, 3);
-
-  // Tiny delicate medicinal herb sprig with jade leaves and berries
-  ctx.strokeStyle = '#4D754B';
-  ctx.lineWidth = 2;
+  // Ceramic Terracotta Pot
+  ctx.fillStyle = '#7A4328';
   ctx.beginPath();
-  ctx.moveTo(x, startY + 2);
-  ctx.lineTo(x - 6, startY - 14);
-  ctx.moveTo(x, startY + 2);
-  ctx.lineTo(x + 8, startY - 18);
-  ctx.stroke();
-
-  // Leaves
-  ctx.fillStyle = '#6BA382';
-  ctx.beginPath();
-  ctx.ellipse(x - 10, startY - 14, 6, 3, -0.4, 0, Math.PI * 2);
-  ctx.ellipse(x + 12, startY - 18, 7, 3.5, 0.4, 0, Math.PI * 2);
-  ctx.ellipse(x - 2, startY - 22, 6, 3, 0, 0, Math.PI * 2);
+  ctx.moveTo(x - potW * 0.4, y - potH);
+  ctx.lineTo(x + potW * 0.4, y - potH);
+  ctx.lineTo(x + potW * 0.3, y);
+  ctx.lineTo(x - potW * 0.3, y);
+  ctx.closePath();
   ctx.fill();
 
-  // Tiny red medicinal berries
-  ctx.fillStyle = '#C42828';
+  // Pot Rim
+  ctx.fillStyle = '#9C5837';
+  ctx.fillRect(x - potW * 0.45, y - potH - 4, potW * 0.9, 6);
+
+  // Green Medicinal Sprouts
+  ctx.fillStyle = '#4E7D46';
   ctx.beginPath();
-  ctx.arc(x - 6, startY - 10, 2.5, 0, Math.PI * 2);
-  ctx.arc(x + 6, startY - 14, 2.5, 0, Math.PI * 2);
+  ctx.arc(x - 6, y - potH - 10, 8, 0, Math.PI * 2);
+  ctx.arc(x + 6, y - potH - 12, 10, 0, Math.PI * 2);
+  ctx.arc(x, y - potH - 18, 9, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#78A86C';
+  ctx.beginPath();
+  ctx.arc(x - 4, y - potH - 12, 5, 0, Math.PI * 2);
+  ctx.arc(x + 4, y - potH - 14, 6, 0, Math.PI * 2);
   ctx.fill();
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SUBTLE HANGING DRIED MEDICINAL HERBS (SPARSE ON WALLS)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Hanging Vines (Beside the Shelves - Scaled without Distortion, Seamlessly Tiled Vertically)
+function drawHangingVines(ctx, x, y, width, totalHeight) {
+  if (!vineImage.complete || vineImage.naturalWidth === 0) return;
+  const aspect = vineImage.naturalHeight / vineImage.naturalWidth; // 481 / 102 ≈ 4.715
+  const segH = width * aspect;
 
-function drawSubtleHangingHerb(ctx, x, y, type = 'roots') {
-  // Small Dark Wooden Peg
-  ctx.fillStyle = '#1D120B';
-  ctx.fillRect(x - 3, y - 3, 6, 6);
-  ctx.fillStyle = '#5A3825';
-  ctx.fillRect(x - 2, y - 2, 4, 4);
-
-  // Thin Hemp String
-  ctx.strokeStyle = '#8C6239';
-  ctx.lineWidth = 1.5;
+  ctx.save();
   ctx.beginPath();
-  ctx.moveTo(x, y);
-  ctx.lineTo(x, y + 12);
-  ctx.stroke();
+  ctx.rect(x - 2, y, width + 4, totalHeight);
+  ctx.clip();
 
-  if (type === 'roots') {
-    // Small Bundle of Dried Thin Roots / Ginseng (height ~ 45px)
-    ctx.strokeStyle = '#1D120B';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(x, y + 12);
-    ctx.lineTo(x - 4, y + 36);
-    ctx.moveTo(x, y + 12);
-    ctx.lineTo(x + 3, y + 42);
-    ctx.moveTo(x, y + 12);
-    ctx.lineTo(x + 6, y + 32);
-    ctx.stroke();
-
-    ctx.strokeStyle = '#D8BA8C'; // Dried root beige
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    ctx.moveTo(x, y + 12);
-    ctx.lineTo(x - 4, y + 36);
-    ctx.moveTo(x, y + 12);
-    ctx.lineTo(x + 3, y + 42);
-    ctx.moveTo(x, y + 12);
-    ctx.lineTo(x + 6, y + 32);
-    ctx.stroke();
-
-    // Red cord tie
-    ctx.fillStyle = '#8B2626';
-    ctx.fillRect(x - 3, y + 14, 6, 2.5);
-  } else if (type === 'flowers') {
-    // Small Bundle of Dried Safflower / Chrysanthemum (height ~ 40px)
-    ctx.fillStyle = '#1D120B';
-    ctx.beginPath();
-    ctx.ellipse(x, y + 24, 7, 10, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#C45228'; // Burnt orange/saffron
-    ctx.beginPath();
-    ctx.ellipse(x, y + 24, 5.5, 8.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#8B2626'; // Red tie
-    ctx.fillRect(x - 4, y + 14, 8, 2.5);
-  } else {
-    // Small Bundle of Dried Medicinal Leaves / Stems (height ~ 42px)
-    ctx.fillStyle = '#1D120B';
-    ctx.beginPath();
-    ctx.ellipse(x, y + 22, 6, 9, 0.1, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#5B7A4E'; // Muted olive green
-    ctx.beginPath();
-    ctx.ellipse(x, y + 22, 4.5, 7.5, 0.1, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#8B2626';
-    ctx.fillRect(x - 3, y + 14, 6, 2.5);
+  let currY = y;
+  while (currY < y + totalHeight) {
+    ctx.drawImage(vineImage, x, currY, width, segH);
+    currY += segH - 1; // Seamless vertical tiling without elongation or distortion
   }
-}
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// BOTANICAL MEDICINE CHART SCROLL (LABORATORY WALL)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-function drawBotanicalMedicineChart(ctx, x, y, width = 56, height = 76) {
-  // Shadow
-  ctx.fillStyle = 'rgba(20, 11, 7, 0.35)';
-  ctx.fillRect(x + 2, y + 2, width, height);
-
-  // Aged Mulberry Paper Scroll Body
-  ctx.fillStyle = '#E8DEC8';
-  ctx.fillRect(x, y, width, height);
-  ctx.strokeStyle = '#9A8E72';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(x, y, width, height);
-
-  // Dark Wood Scroll Rollers (Top and Bottom)
-  ctx.fillStyle = '#3A2015';
-  ctx.fillRect(x - 3, y - 2, width + 6, 4);
-  ctx.fillRect(x - 3, y + height - 2, width + 6, 4);
-
-  // Top Hanging Cord
-  ctx.strokeStyle = '#8B2626';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(x + 4, y);
-  ctx.lineTo(x + width / 2, y - 8);
-  ctx.lineTo(x + width - 4, y);
-  ctx.stroke();
-
-  // Botanical Herbal Brush Sketch (Center)
-  ctx.strokeStyle = '#3F5E4D';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(x + width * 0.45, y + height * 0.7);
-  ctx.quadraticCurveTo(x + width * 0.4, y + height * 0.4, x + width * 0.5, y + height * 0.22);
-  ctx.stroke();
-
-  // Leaves
-  ctx.fillStyle = '#4D754B';
-  ctx.beginPath();
-  ctx.ellipse(x + width * 0.38, y + height * 0.4, 7, 3, -0.5, 0, Math.PI * 2);
-  ctx.ellipse(x + width * 0.58, y + height * 0.32, 8, 3.5, 0.4, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Red flower blossom
-  ctx.fillStyle = '#C43838';
-  ctx.beginPath();
-  ctx.arc(x + width * 0.5, y + height * 0.2, 4, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Vertical Calligraphy Notes Columns
-  ctx.fillStyle = '#3A281E';
-  ctx.fillRect(x + width * 0.75, y + 14, 2, height * 0.55);
-  ctx.fillRect(x + width * 0.85, y + 14, 2, height * 0.45);
-
-  // Cinnabar Red Herbalist Seal Stamp
-  ctx.fillStyle = '#A82828';
-  ctx.fillRect(x + 8, y + height - 16, 8, 8);
-  ctx.fillStyle = '#E8DEC8';
-  ctx.fillRect(x + 10, y + height - 14, 4, 4);
+  ctx.restore();
 }
 
 function drawShopBackground() {
@@ -4002,11 +3948,15 @@ function drawShopBackground() {
   ctx.fillStyle = '#87553A';
   ctx.fillRect(0, 26, CANVAS_WIDTH, 2);
 
-  // 1.5. Subtle Traditional Hanging Dried Medicinal Herbs (Sparse & Natural)
+  // 1.5. Hanging Vines beside the Shelves (Left & Right outer walls and inner cabinet flanks)
+  drawHangingVines(ctx, 40, 0, 78, 648);
+  drawHangingVines(ctx, 736, 0, 46, 510);
+  drawHangingVines(ctx, 1140, 0, 46, 510);
+  drawHangingVines(ctx, 1785, 0, 78, 648);
+
+  // 1.6. Subtle Traditional Hanging Dried Medicinal Herbs
   drawSubtleHangingHerb(ctx, 95, 120, 'roots');
   drawSubtleHangingHerb(ctx, 120, 240, 'flowers');
-  drawSubtleHangingHerb(ctx, 770, 180, 'leaves');
-  drawSubtleHangingHerb(ctx, 1150, 180, 'roots');
   drawSubtleHangingHerb(ctx, 1790, 120, 'leaves');
   drawSubtleHangingHerb(ctx, 1815, 240, 'flowers');
 
@@ -4027,77 +3977,56 @@ function drawShopBackground() {
   // 3. Aged Dark Timber Floorboards (MATCHED FLOOR RENDERER)
   drawApothecaryFloor(ctx, CANVAS_HEIGHT * 0.6, CANVAS_HEIGHT);
 
-  // 4. Central Traditional Chinese Lattice Moon Window (Unobstructed & Open)
+  // 4. Central Autumn Mountain Landscape & Waterfall Window
   drawChineseLatticeWindow(ctx);
 
-  // 5. Left & Right Hundred-Drawer Apothecary Cabinets (Baizigui 百子柜)
-  drawBaiziguiCabinet(ctx, 150, 750);
-  drawBaiziguiCabinet(ctx, 1170, 1770);
+  // 4.5. Flanking Traditional Hanging Calligraphy Scrolls
+  drawChineseCalligraphyScroll(ctx, 770, 80, 52, 280, ["日","々","是","好","日"]);
+  drawChineseCalligraphyScroll(ctx, 1150, 80, 52, 280, ["一","期","一","会"]);
 
-  // 6. Shelves Items (Authentic Ancient Chinese Ceramics, Herbs, Books, Gourds)
-  // Left Cabinet:
-  // Shelf 1 (y = 160)
-  drawQinghuaPorcelainJar(ctx, 195, 160, 48, 62);
-  drawSprite(ctx, lanternSprite, lanternColorMap, 250, 160 - 120, 8); // Lantern 1
-  drawThreadBoundBooks(ctx, 350, 160, 54, 64, true); // Horizontal book stack
-  drawGourdBottle(ctx, 430, 160, 1.05); // Calabash bottle
-  drawCeladonJar(ctx, 500, 160, 46, 56, true);
-  drawGinsengBundle(ctx, 570, 160, 1.0);
-  drawQinghuaPorcelainJar(ctx, 640, 160, 50, 64);
-  drawHerbPaperPacket(ctx, 710, 160, 1.0);
+  // Lanterns hanging beside scrolls
+  drawSprite(ctx, lanternSprite, lanternColorMap, 770 - 44, 390 - 60, 8);
+  drawSprite(ctx, lanternSprite, lanternColorMap, 1150 - 44, 390 - 60, 8);
 
-  // Shelf 2 (y = 280)
-  drawBambooCanister(ctx, 190, 280, 36, 62);
-  drawLingzhiDish(ctx, 260, 280, 1.0);
-  drawCeladonJar(ctx, 330, 280, 48, 58, false);
-  drawThreadBoundBooks(ctx, 400, 280, 36, 64, false, false); // Vertical indigo book
-  drawSprite(ctx, lanternSprite, lanternColorMap, 470, 280 - 120, 8); // Lantern 2
-  drawCeramicHerbBowl(ctx, 555, 280, 1.0, '#DE8A24'); // Saffron bowl
-  drawClayHerbPot(ctx, 630, 280, 44, 54);
-  drawGourdBottle(ctx, 700, 280, 0.95);
+  // 5. Left & Right Hundred-Drawer Apothecary Cabinets (5 Horizontal Rows of Drawers)
+  drawBaiziguiCabinet(ctx, 140, 740);
+  drawBaiziguiCabinet(ctx, 1180, 1780);
 
-  // Shelf 3 (y = 400)
-  drawThreadBoundBooks(ctx, 190, 400, 36, 64, false, true); // Leaning book
-  drawQinghuaPorcelainJar(ctx, 260, 400, 52, 66);
-  drawSteelyardScale(ctx, 340, 400, 1.0); // Apothecary balance scale
-  drawGinsengBundle(ctx, 420, 400, 1.05);
-  drawBambooCanister(ctx, 490, 400, 34, 58);
-  drawCeladonJar(ctx, 560, 400, 48, 58, true);
-  drawSprite(ctx, lanternSprite, lanternColorMap, 640, 400 - 120, 8); // Lantern 3
-  drawHerbPaperPacket(ctx, 710, 400, 1.0);
+  // 6. Shelves items placed across the 2 tiers (Y = 138, Y = 248)
+  // Left Shelves:
+  // Shelf 1 (y = 138)
+  drawBookImage(ctx, booksTwoImage, 170, 138, 37, 64, false, false);
+  drawSprite(ctx, lanternSprite, lanternColorMap, 230, 138 - 120, 8);
+  drawFlask(ctx, 'purple', 330, 138 - 88); // Purple/Pink flask
+  drawFlask(ctx, 'red', 420, 138 - 88);
+  drawPottedPlant(ctx, 510, 138, 140, 410);
+  drawSprite(ctx, jarSprite, jarColorMap, 630, 138 - 72, 8);
 
-  // Right Cabinet:
-  // Shelf 1 (y = 160)
-  drawGourdBottle(ctx, 1210, 160, 1.05);
-  drawQinghuaPorcelainJar(ctx, 1280, 160, 50, 64);
-  drawCeramicHerbBowl(ctx, 1360, 160, 1.0, '#C84024'); // Goji berries bowl
-  drawCeladonJar(ctx, 1435, 160, 48, 58, true);
-  drawThreadBoundBooks(ctx, 1515, 160, 54, 64, true); // Horizontal stack
-  drawSprite(ctx, lanternSprite, lanternColorMap, 1600, 160 - 120, 8); // Lantern 4
-  drawClayHerbPot(ctx, 1685, 160, 46, 56);
+  // Shelf 2 (y = 248)
+  drawPottedPlant(ctx, 170, 248, 140, 170);
+  drawBookImage(ctx, booksThreeImage, 270, 248, 57, 64, true);
+  drawFlask(ctx, 'pink', 360, 248 - 88);
+  drawFlask(ctx, 'green', 445, 248 - 88);
+  drawSprite(ctx, lanternSprite, lanternColorMap, 530, 248 - 120, 8);
+  drawBookImage(ctx, booksTwoImage, 640, 248, 37, 64, false, false);
 
-  // Shelf 2 (y = 280)
-  drawSprite(ctx, lanternSprite, lanternColorMap, 1210, 280 - 120, 8); // Lantern 5
-  drawThreadBoundBooks(ctx, 1290, 280, 36, 64, false, false);
-  drawBambooCanister(ctx, 1360, 280, 34, 60);
-  drawLingzhiDish(ctx, 1435, 280, 1.05);
-  drawQinghuaPorcelainJar(ctx, 1515, 280, 52, 66);
-  drawGinsengBundle(ctx, 1590, 280, 1.0);
-  drawCeladonJar(ctx, 1665, 280, 48, 58, false);
+  // Right Shelves:
+  // Shelf 1 (y = 138)
+  drawFlask(ctx, 'red', 1210, 138 - 88);
+  drawBookImage(ctx, booksThreeImage, 1290, 138, 57, 64, true);
+  drawFlask(ctx, 'pink', 1370, 138 - 88);
+  drawPottedPlant(ctx, 1470, 138, 140, 1330);
+  drawFlask(ctx, 'blue', 1590, 138 - 88);
+  drawBookImage(ctx, booksTwoImage, 1690, 138, 37, 64, false, false);
 
-  // Shelf 3 (y = 400)
-  drawClayHerbPot(ctx, 1215, 400, 44, 54);
-  drawSteelyardScale(ctx, 1290, 400, 1.0);
-  drawGourdBottle(ctx, 1365, 400, 1.0);
-  drawThreadBoundBooks(ctx, 1435, 400, 36, 64, false, true);
-  drawSprite(ctx, lanternSprite, lanternColorMap, 1520, 400 - 120, 8); // Lantern 6
-  drawCeramicHerbBowl(ctx, 1605, 400, 1.0, '#4E7A4A'); // Ground herbal powder
-  drawQinghuaPorcelainJar(ctx, 1680, 400, 50, 64);
+  // Shelf 2 (y = 248)
+  drawSprite(ctx, lanternSprite, lanternColorMap, 1200, 248 - 120, 8);
+  drawFlask(ctx, 'purple', 1300, 248 - 88);
+  drawPottedPlant(ctx, 1390, 248, 140, 1440);
+  drawFlask(ctx, 'blue', 1500, 248 - 88);
+  drawBookImage(ctx, booksTwoImage, 1600, 248, 37, 64, true);
+  drawBookImage(ctx, booksTwoImage, 1680, 248, 37, 64, false, false);
 }
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// COUNTERTOP AND COUNTER PROPS RENDERING
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function drawCounterAndItems() {
   const counterHeight = 160;
@@ -4106,7 +4035,7 @@ function drawCounterAndItems() {
   ctx.fillStyle = 'rgba(20, 11, 7, 0.45)';
   ctx.fillRect(100, counterY + counterHeight - 8, CANVAS_WIDTH - 200, 30);
 
-  // 1. Counter Wooden Base (Rich Aged Rosewood)
+  // 1. Counter Wooden Base (Rich Aged Rosewood - Clean Front, NO DRAWERS ON COUNTER)
   ctx.fillStyle = '#3D2418';
   ctx.fillRect(100, counterY, CANVAS_WIDTH - 200, counterHeight);
 
@@ -4134,6 +4063,20 @@ function drawCounterAndItems() {
   ctx.fillRect(100, counterY, CANVAS_WIDTH - 200, 32);
   ctx.fillStyle = '#87553A'; // Countertop highlight line
   ctx.fillRect(100, counterY + 2, CANVAS_WIDTH - 200, 4);
+
+  // 2.1. Subtle Natural Window Light Sheen on Counter directly beneath Window (X: 770 to 1150)
+  const counterSunlightGrad = ctx.createLinearGradient(770, counterY, 1150, counterY);
+  counterSunlightGrad.addColorStop(0, 'rgba(255, 220, 130, 0)');
+  counterSunlightGrad.addColorStop(0.2, 'rgba(255, 225, 140, 0.12)');
+  counterSunlightGrad.addColorStop(0.5, 'rgba(255, 235, 160, 0.18)');
+  counterSunlightGrad.addColorStop(0.8, 'rgba(255, 225, 140, 0.12)');
+  counterSunlightGrad.addColorStop(1, 'rgba(255, 220, 130, 0)');
+  ctx.fillStyle = counterSunlightGrad;
+  ctx.fillRect(770, counterY, 380, 32);
+
+  // Soft warm top edge highlight on counter slab under window
+  ctx.fillStyle = 'rgba(255, 240, 180, 0.28)';
+  ctx.fillRect(790, counterY + 2, 340, 3);
 
   // 3. Counter Outer Bevels & Inset Panels
   ctx.strokeStyle = '#1D120B';
@@ -4166,6 +4109,9 @@ function drawCounterAndItems() {
     ctx.fillRect(x + 190, counterY + 124, 6, 6);
   }
 
+  // 3.5. Draw Symmetrical Green Hanging Banners on Counter (Left & Right)
+  drawCounterBanners(ctx);
+
   // 4. Authentic Ancient Chinese Countertop Props
   // Bronze Lotus Candle 1 (Left)
   drawSprite(ctx, candleSprite, candleColorMap, 300 - 8, counterY - 104, 8);
@@ -4173,18 +4119,14 @@ function drawCounterAndItems() {
   // Potted Miniature Chinese Bonsai in Celadon Planter 1
   drawChineseBonsai(ctx, 460, counterY, 110, 120);
 
-  // Ancient Chinese Abacus (Suanpan 算盘)
-  drawAbacus(ctx, 640, counterY, 78, 38);
-
-  // Mountain-Shaped Jade Brush Rest & Calligraphy Brushes
-  drawBrushRestAndInk(ctx, 760, counterY, 68, 38);
-
-  // Stack of Folded Paper Herb Packets tied with red cord
-  drawHerbPaperPacket(ctx, 860, counterY, 1.1);
-
   // Ancient Medical Compendium / Recipe Book (Interactable - keeps exact coordinates X: 950, Y: 485)
   if (bookImage.complete) {
     ctx.drawImage(bookImage, 950, 485, 96, 96);
+    // Subtle golden sunlight rim on recipe book
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 235, 170, 0.15)';
+    ctx.fillRect(950, 485, 96, 12);
+    ctx.restore();
   } else {
     // Fallback Thread-Bound Prescription Guide
     ctx.fillStyle = '#1D120B';
@@ -4195,16 +4137,15 @@ function drawCounterAndItems() {
     ctx.fillRect(960, counterY - 24, 30, 20);
     ctx.fillStyle = '#8B2626'; // Ribbon bookmark
     ctx.fillRect(995, counterY - 26, 4, 32);
+    ctx.fillStyle = 'rgba(255, 235, 170, 0.18)';
+    ctx.fillRect(950, counterY - 26, 96, 6);
   }
-
-  // Bronze Lotus Candle 2 (Right)
-  drawSprite(ctx, candleSprite, candleColorMap, 1300 - 8, counterY - 104, 8);
-
-  // Stack of Folded Paper Packets
-  drawHerbPaperPacket(ctx, 1390, counterY, 1.15);
 
   // Potted Miniature Chinese Bonsai in Celadon Planter 2
   drawChineseBonsai(ctx, 1520, counterY, 110, 120);
+
+  // Bronze Lotus Candle 2 (Right)
+  drawSprite(ctx, candleSprite, candleColorMap, 1680 - 8, counterY - 104, 8);
 }
 
 function drawGlows() {
@@ -4243,6 +4184,9 @@ function draw() {
     // 1. Base Wall, Floor, Baizigui Hundred-Drawer Cabinets, Window, Subtle Hanging Herbs, Jars, Lanterns
     drawShopBackground();
 
+    // 1.1. Natural Warm Sunlight streaming through the Central Window into the Room
+    drawWindowSunlight(ctx);
+
     // 1.2. Main Shop Traditional Chinese Carpet / Rug (between counter and hotbar)
     drawTraditionalRug(ctx, 560, 680, 800, 180);
 
@@ -4254,6 +4198,19 @@ function draw() {
     ctx.fill();
     drawPlayerImage(ctx, player.x, player.y);
 
+    // Subtle natural window light rim on apothecary hair/shoulders
+    const playerDistToCenter = Math.abs((player.x + player.renderWidth / 2) - 960);
+    if (playerDistToCenter < 280) {
+      const pLight = (1 - playerDistToCenter / 280) * 0.14;
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      ctx.fillStyle = `rgba(255, 225, 140, ${pLight})`;
+      ctx.beginPath();
+      ctx.arc(player.x + player.renderWidth / 2, player.y + player.renderHeight * 0.3, player.renderWidth * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
     // 3. Draw Rosewood Counter, Abacus, Brush Rest, Prescription Book, Bonsai, Candles
     drawCounterAndItems();
 
@@ -4264,17 +4221,34 @@ function draw() {
       ctx.ellipse(npc.x + npc.renderWidth / 2, npc.y + npc.renderHeight, npc.renderWidth / 2, 10, 0, 0, Math.PI * 2);
       ctx.fill();
       drawSprite(ctx, playerSprite, npcColorMap, npc.x, npc.y, pixelScale);
+
+      // Subtle warm highlight to NPC from window sunlight
+      const npcDistToCenter = Math.abs((npc.x + npc.renderWidth / 2) - 960);
+      if (npcDistToCenter < 320) {
+        const npcLightIntensity = (1 - npcDistToCenter / 320) * 0.16;
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.fillStyle = `rgba(255, 225, 150, ${npcLightIntensity})`;
+        ctx.beginPath();
+        ctx.arc(npc.x + npc.renderWidth / 2, npc.y + npc.renderHeight * 0.35, npc.renderWidth * 0.55, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
     }
 
     // 4.5. Small Traditional Medicinal Herb Pots (Neatly against corners, clean of UI)
     drawSmallHerbPot(ctx, 70, CANVAS_HEIGHT - 35, 44);
     drawSmallHerbPot(ctx, CANVAS_WIDTH - 70, CANVAS_HEIGHT - 35, 44);
 
-    // 5. Draw Ambient shadowy room tint overlay
-    ctx.fillStyle = 'rgba(25, 18, 28, 0.22)';
+    // 5. Ambient room contrast tint overlay (center illuminated by sunlight, corners cozy and shaded)
+    const roomTint = ctx.createRadialGradient(960, 480, 200, 960, 480, 1000);
+    roomTint.addColorStop(0, 'rgba(20, 14, 24, 0.06)');
+    roomTint.addColorStop(0.7, 'rgba(20, 14, 24, 0.18)');
+    roomTint.addColorStop(1, 'rgba(15, 10, 18, 0.32)');
+    ctx.fillStyle = roomTint;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // 6. Draw Warm Amber Glow Halos
+    // 6. Draw Warm Amber Glow Halos for Lanterns & Candles
     drawGlows();
 
   } else if (currentRoom === RoomState.WORKROOM) {
