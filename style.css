@@ -1,3 +1,10 @@
+@font-face {
+  font-family: 'Alagard';
+  src: url('alagard.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 /* Reset and Base Styles */
 * {
   margin: 0;
@@ -68,9 +75,10 @@ body {
 /* Softer Cottagecore backgrounds */
 #exterior-bg {
   background-color: var(--soft-green);
-  background-image: 
-    repeating-linear-gradient(90deg, transparent, transparent 64px, rgba(74, 59, 50, 0.1) 64px, rgba(74, 59, 50, 0.1) 128px),
-    repeating-linear-gradient(0deg, transparent, transparent 64px, rgba(74, 59, 50, 0.1) 64px, rgba(74, 59, 50, 0.1) 128px);
+  background-image: url('apothecary_booth.gif');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 #interior-bg {
@@ -128,18 +136,30 @@ body {
 }
 
 .game-title {
-  font-size: 6rem;
+  font-family: 'Alagard', serif;
+  font-size: 8.5rem;
   color: var(--soft-light);
   margin-bottom: 50px;
   letter-spacing: 6px;
   text-transform: uppercase;
   font-weight: 800;
-  text-shadow: 3px 3px 0 var(--soft-dark), 0 0 20px rgba(201, 155, 59, 0.4);
+  background: linear-gradient(
+    120deg,
+    var(--soft-light) 30%,
+    #ffffff 50%,
+    var(--soft-light) 70%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShine 3s linear infinite;
+  filter: drop-shadow(4px 4px 0px var(--soft-dark)) drop-shadow(0 0 20px rgba(201, 155, 59, 0.4));
+  text-align: center;
 }
 
 /* Soft Retro Button - Imperial Chinese Style */
 .fantasy-btn {
-  font-family: inherit;
+  font-family: 'VT323', monospace;
   font-weight: bold;
   font-size: 2.2rem;
   color: var(--soft-light);
@@ -155,6 +175,24 @@ body {
   transition: all 0.2s;
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.fantasy-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  pointer-events: none;
 }
 
 .fantasy-btn:hover {
@@ -164,9 +202,31 @@ body {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6), 0 0 12px rgba(201, 155, 59, 0.5);
 }
 
+.fantasy-btn:hover::after {
+  animation: btnShine 0.8s ease-in-out;
+}
+
 .fantasy-btn:active {
   transform: translateY(2px);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+@keyframes textShine {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes btnShine {
+  0% {
+    left: -150%;
+  }
+  100% {
+    left: 150%;
+  }
 }
 
 /* HUD */
