@@ -1298,6 +1298,16 @@ playerUpImg.src = 'apothecary_up.png';
 
 let playerDirection = 'down'; // Track current player direction
 
+// Load 4-directional customer images
+const customerFrontImg = new Image();
+customerFrontImg.src = 'customer_front.png';
+const customerLeftImg = new Image();
+customerLeftImg.src = 'customer_left.png';
+const customerRightImg = new Image();
+customerRightImg.src = 'customer_right.png';
+const customerBackImg = new Image();
+customerBackImg.src = 'customer_back.png';
+
 const bookImage = new Image();
 bookImage.src = 'book.png';
 
@@ -1415,7 +1425,8 @@ const npc = {
   renderWidth: playerSprite[0].length * pixelScale,
   renderHeight: playerSprite.length * pixelScale,
   active: false,
-  reachedCounter: false
+  reachedCounter: false,
+  direction: 'left' // default direction
 };
 
 // Light Sources Definitions
@@ -1856,10 +1867,13 @@ function update(dt) {
         if (Math.abs(npc.x - npc.targetX) > 5) {
           const dir = Math.sign(npc.targetX - npc.x);
           npc.x += dir * NPC_SPEED * dt;
+          npc.direction = dir < 0 ? 'left' : 'right';
         } else {
           npc.reachedCounter = true;
           if (npc.targetX > CANVAS_WIDTH) {
             npc.active = false;
+          } else {
+            npc.direction = 'back';
           }
         }
       }
@@ -3411,7 +3425,7 @@ function drawBaiziguiCabinet(ctx, x1, x2) {
 }
 
 // 16.5. Traditional Chinese Hanging Calligraphy Scroll (Flanking Central Window)
-function drawChineseCalligraphyScroll(ctx, x, y, width = 52, height = 280, titleChars = ["日","々","是","好","日"]) {
+function drawChineseCalligraphyScroll(ctx, x, y, width = 52, height = 280, titleChars = ["日", "々", "是", "好", "日"]) {
   const startX = x - width / 2;
 
   // Drop shadow
@@ -3981,8 +3995,8 @@ function drawShopBackground() {
   drawChineseLatticeWindow(ctx);
 
   // 4.5. Flanking Traditional Hanging Calligraphy Scrolls
-  drawChineseCalligraphyScroll(ctx, 770, 80, 52, 280, ["日","々","是","好","日"]);
-  drawChineseCalligraphyScroll(ctx, 1150, 80, 52, 280, ["一","期","一","会"]);
+  drawChineseCalligraphyScroll(ctx, 770, 80, 52, 280, ["日", "々", "是", "好", "日"]);
+  drawChineseCalligraphyScroll(ctx, 1150, 80, 52, 280, ["一", "期", "一", "会"]);
 
   // Lanterns hanging beside scrolls
   drawSprite(ctx, lanternSprite, lanternColorMap, 770 - 44, 390 - 60, 8);
@@ -4220,19 +4234,23 @@ function draw() {
       ctx.beginPath();
       ctx.ellipse(npc.x + npc.renderWidth / 2, npc.y + npc.renderHeight, npc.renderWidth / 2, 10, 0, 0, Math.PI * 2);
       ctx.fill();
-      drawSprite(ctx, playerSprite, npcColorMap, npc.x, npc.y, pixelScale);
 
-      // Subtle warm highlight to NPC from window sunlight
-      const npcDistToCenter = Math.abs((npc.x + npc.renderWidth / 2) - 960);
-      if (npcDistToCenter < 320) {
-        const npcLightIntensity = (1 - npcDistToCenter / 320) * 0.16;
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        ctx.fillStyle = `rgba(255, 225, 150, ${npcLightIntensity})`;
-        ctx.beginPath();
-        ctx.arc(npc.x + npc.renderWidth / 2, npc.y + npc.renderHeight * 0.35, npc.renderWidth * 0.55, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+      let img = customerFrontImg;
+      if (npc.direction === 'left') img = customerLeftImg;
+      else if (npc.direction === 'right') img = customerRightImg;
+      else if (npc.direction === 'back') img = customerBackImg;
+
+      if (img.complete) {
+        const targetHeight = 190.24 * 2; // EXACT height of the player (232 * 0.82) doubled to match visual scale
+        const scale = targetHeight / img.naturalHeight;
+        const imgWidth = img.naturalWidth * scale;
+        const imgHeight = img.naturalHeight * scale;
+        const drawX = npc.x + (npc.renderWidth - imgWidth) / 2;
+        const drawY = npc.y + npc.renderHeight - imgHeight;
+        ctx.drawImage(img, drawX, drawY, imgWidth, imgHeight);
+      } else {
+        drawSprite(ctx, playerSprite, npcColorMap, npc.x, npc.y, pixelScale);
+
       }
     }
 
